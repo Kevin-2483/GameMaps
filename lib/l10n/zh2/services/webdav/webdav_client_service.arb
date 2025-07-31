@@ -1,0 +1,7 @@
+{
+  "connectionFailed_9372": "连接失败",
+  "authFailedMessage_4821": "认证失败",
+  "invalidServerPath_4821": "无效的服务器路径",
+  "connectionTimeoutError_4821": "连接超时",
+  "connectionFailedWithError_7281": "连接失败：{error}"
+}

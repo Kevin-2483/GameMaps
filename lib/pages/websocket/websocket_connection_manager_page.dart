@@ -582,7 +582,10 @@ class _WebSocketConnectionManagerPageState
         children: [
           // 标题栏
           DraggableTitleBar(
-            title: 'WebSocket 连接管理',
+            title: LocalizationService
+                .instance
+                .current
+                .websocketConnectionManagement_4821,
             icon: Icons.wifi,
             actions: [
               if (widget.onClose != null)

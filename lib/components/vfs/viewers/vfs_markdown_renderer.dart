@@ -959,7 +959,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   const SizedBox(width: 4),
                   Text(
                     LocalizationService.instance.current.htmlStatusLabel_4821(
-                      _enableHtmlRendering ? '' : '(禁用)',
+                      _enableHtmlRendering
+                          ? ''
+                          : LocalizationService
+                                .instance
+                                .current
+                                .disabledLabel_4821,
                     ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableHtmlRendering
@@ -1131,7 +1136,12 @@ class _VfsMarkdownRendererState extends State<VfsMarkdownRenderer> {
                   const SizedBox(width: 4),
                   Text(
                     LocalizationService.instance.current.audioStatus_7421(
-                      _enableAudioRendering ? '' : '(禁用)',
+                      _enableAudioRendering
+                          ? ''
+                          : LocalizationService
+                                .instance
+                                .current
+                                .disabledIndicator_7421,
                     ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _enableAudioRendering

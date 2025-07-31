@@ -355,7 +355,9 @@ class CollaborationSyncService {
       final lockState = ElementLockState.fromJson(data);
       _stateManager.receiveRemoteLockState(lockState);
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程元素锁定失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ${LocalizationService.instance.current.remoteElementLockFailure_4821}: \$e',
+      );
     }
   }
 
@@ -411,7 +413,11 @@ class CollaborationSyncService {
 
       _eventController.add(CollaborationUserLeft(userId: userId));
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程用户离开失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ' +
+            LocalizationService.instance.current.remoteUserLeaveError_4728 +
+            ': \$e',
+      );
     }
   }
 
@@ -422,7 +428,11 @@ class CollaborationSyncService {
       // 冲突处理逻辑可以在这里实现
       _eventController.add(CollaborationConflictDetected(conflict: conflict));
     } catch (e) {
-      debugPrint('[CollaborationSyncService] 处理远程冲突失败: $e');
+      debugPrint(
+        '[CollaborationSyncService] ' +
+            LocalizationService.instance.current.remoteConflictError_7285 +
+            ': \$e',
+      );
     }
   }
 

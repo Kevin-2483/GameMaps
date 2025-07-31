@@ -64,7 +64,9 @@ class ExternalFunctionHandler {
         try {
           options = jsonDecode(optionsJson) as Map<String, dynamic>;
         } catch (e) {
-          debugPrint('Error parsing options JSON: $e');
+          debugPrint(
+            LocalizationService.instance.current.jsonParseError_7282(e),
+          );
           options = null;
         }
       }
@@ -94,12 +96,24 @@ class ExternalFunctionHandler {
       );
 
       // 记录执行日志
-      String logMessage = '语音合成: "$text"';
-      if (language != null) logMessage += ', language: $language';
-      if (speechRate != null) logMessage += ', rate: $speechRate';
-      if (volume != null) logMessage += ', volume: $volume';
-      if (pitch != null) logMessage += ', pitch: $pitch';
-      if (voice != null) logMessage += ', voice: $voice';
+      String logMessage = LocalizationService.instance.current
+          .voiceSynthesisLog_7283(text);
+      if (language != null)
+        logMessage += LocalizationService.instance.current.languageLog_7284(
+          language,
+        );
+      if (speechRate != null)
+        logMessage += LocalizationService.instance.current.speechRateLog_7285(
+          speechRate,
+        );
+      if (volume != null)
+        logMessage += LocalizationService.instance.current.volumeLog_7286(
+          volume,
+        );
+      if (pitch != null)
+        logMessage += LocalizationService.instance.current.pitchLog_7287(pitch);
+      if (voice != null)
+        logMessage += LocalizationService.instance.current.voiceLog_7288(voice);
 
       addExecutionLog(logMessage);
     } catch (e) {
@@ -222,10 +236,14 @@ class ExternalFunctionHandler {
       return range;
     } catch (e) {
       debugPrint(
-        LocalizationService.instance.current.failedToGetVoiceSpeedRange(e.toString()),
+        LocalizationService.instance.current.failedToGetVoiceSpeedRange(
+          e.toString(),
+        ),
       );
       addExecutionLog(
-        LocalizationService.instance.current.failedToGetVoiceSpeedRange(e.toString()),
+        LocalizationService.instance.current.failedToGetVoiceSpeedRange(
+          e.toString(),
+        ),
       );
       return null;
     }

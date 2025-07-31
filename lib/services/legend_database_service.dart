@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/legend_item.dart';
 import 'database_path_service.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 class LegendDatabaseService {

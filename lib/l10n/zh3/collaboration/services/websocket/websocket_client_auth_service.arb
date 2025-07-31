@@ -1,0 +1,11 @@
+{
+  "serverChallengeReceived_4289": "serverChallengeReceived",
+  "authFailedChallengeDecrypt_7281": "authFailedChallengeDecrypt",
+  "challengeResponseSentResult": "challengeResponseSentResult: {sendResult}",
+  "authenticationSuccess_7421": "authenticationSuccess",
+  "unknownReason_7421": "未知原因",
+  "authenticationFailed": "authenticationFailed: {reason}",
+  "unknownError_7421": "未知错误",
+  "serverErrorResponse": "serverErrorResponse: {error}",
+  "ignoredMessageType_7281": "ignoredMessageType: {messageType}"
+}

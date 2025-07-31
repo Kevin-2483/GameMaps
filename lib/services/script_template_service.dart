@@ -1,5 +1,7 @@
+// This file has been processed by AI for internationalization
 import 'package:flutter/services.dart';
 import '../models/script_data.dart';
+import 'localization_service.dart';
 
 /// 脚本模板服务
 /// 负责从assets文件中加载脚本模板内容
@@ -84,49 +86,49 @@ class ScriptTemplateService {
   static String _getDefaultContent(ScriptType type) {
     switch (type) {
       case ScriptType.automation:
-        return '''// 自动化脚本示例
+        return '''// ${LocalizationService.instance.current.automationScriptExample_1234}
 var layers = getLayers();
-log('共有 ' + layers.length.toString() + ' 个图层');
+log('${LocalizationService.instance.current.totalLayers_5678} ' + layers.length.toString() + ' ${LocalizationService.instance.current.layers_9101}');
 
-// 遍历所有元素
+// ${LocalizationService.instance.current.iterateAllElements_1121}
 var elements = getAllElements();
 for (var element in elements) {
-    log('元素 ' + element['id'] + ' 类型: ' + element['type']);
+    log('${LocalizationService.instance.current.element_3141} ' + element['id'] + ' ${LocalizationService.instance.current.type_5161}: ' + element['type']);
 }''';
       case ScriptType.animation:
-        return '''// 动画脚本示例
+        return '''// ${LocalizationService.instance.current.animationScriptExample_7181}
 var elements = getAllElements();
 if (elements.length > 0) {
     var element = elements[0];
     
-    // 动画改变颜色
+    // ${LocalizationService.instance.current.animateColorChange_9202}
     animate(element['id'], 'color', 0xFF00FF00, 1000);
     delay(1000);
     
-    // 动画移动元素
+    // ${LocalizationService.instance.current.animateElementMovement_1222}
     animate(element['id'], 'x', 0.5, 1000);
 }''';
       case ScriptType.filter:
-        return '''// 过滤脚本示例
+        return '''// ${LocalizationService.instance.current.filterScriptExample_3242}
 var allElements = getAllElements();
 var filteredElements = filterElements(allElements, {
     'type': 'rectangle',
     'color': 0xFF0000FF
 });
 
-log('找到 ' + filteredElements.length.toString() + ' 个蓝色矩形');''';
+log('${LocalizationService.instance.current.foundBlueRectangles_5262} ' + filteredElements.length.toString() + ' ${LocalizationService.instance.current.blueRectangles_7282}');''';
       case ScriptType.statistics:
-        return '''// 统计脚本示例
+        return '''// ${LocalizationService.instance.current.statisticsScriptExample_9303}
 var layers = getLayers();
 var totalElements = 0;
 
 for (var layer in layers) {
     var elementCount = layer['elementCount'];
     totalElements += elementCount;
-    log('图层 ' + layer['name'] + ': ' + elementCount.toString() + ' 个元素');
+    log('${LocalizationService.instance.current.layer_1323} ' + layer['name'] + ': ' + elementCount.toString() + ' ${LocalizationService.instance.current.elements_3343}');
 }
 
-log('总计: ' + totalElements.toString() + ' 个元素');''';
+log('${LocalizationService.instance.current.total_5363}: ' + totalElements.toString() + ' ${LocalizationService.instance.current.elements_7383}');''';
     }
   }
 }

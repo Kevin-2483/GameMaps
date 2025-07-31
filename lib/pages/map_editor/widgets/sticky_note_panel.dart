@@ -69,7 +69,7 @@ class _StickyNotePanelState extends State<StickyNotePanel> {
           const SizedBox(height: 16),
           Expanded(
             child: Center(
-child: Text(
+              child: Text(
                 LocalizationService.instance.current.emptyNotesMessage_7421,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14),
@@ -121,7 +121,7 @@ child: Text(
       child: ElevatedButton.icon(
         onPressed: widget.onStickyNoteAdded,
         icon: const Icon(Icons.add),
-label: Text(LocalizationService.instance.current.addNote_7421),
+        label: Text(LocalizationService.instance.current.addNote_7421),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -250,10 +250,16 @@ label: Text(LocalizationService.instance.current.addNote_7421),
                       ), // Z层级检视器按钮 (只在便签被选中时显示)
                       if (widget.selectedStickyNote?.id == note.id &&
                           widget.onZIndexInspectorRequested != null)
-Tooltip(
+                        Tooltip(
                           message: note.elements.isNotEmpty
-                              ? LocalizationService.instance.current.noteElementInspectorWithCount_7421(note.elements.length)
-                              : LocalizationService.instance.current.noteElementInspectorEmpty_1589,
+                              ? LocalizationService.instance.current
+                                    .noteElementInspectorWithCount_7421(
+                                      note.elements.length,
+                                    )
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .noteElementInspectorEmpty_1589,
                           child: GestureDetector(
                             onTap: widget.onZIndexInspectorRequested,
                             child: Container(
@@ -270,12 +276,15 @@ Tooltip(
                         ),
 
                       // 删除按钮
-IconButton(
+                      IconButton(
                         icon: const Icon(Icons.delete, size: 16),
                         onPressed: () => _showDeleteDialog(context, note),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
-                        tooltip: LocalizationService.instance.current.deleteNoteTooltip_7281,
+                        tooltip: LocalizationService
+                            .instance
+                            .current
+                            .deleteNoteTooltip_7281,
                       ),
                     ],
                   ],
@@ -344,7 +353,7 @@ IconButton(
           controller: controller,
           enabled: !widget.isPreviewMode,
           style: const TextStyle(fontSize: 14),
-decoration: InputDecoration(
+          decoration: InputDecoration(
             hintText: LocalizationService.instance.current.noteTitleHint_4821,
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -353,8 +362,10 @@ decoration: InputDecoration(
           textInputAction: TextInputAction.done,
           onSubmitted: (value) {
             if (value.trim() != note.title) {
-final updatedNote = note.copyWith(
-                title: value.trim().isEmpty ? LocalizationService.instance.current.untitledNote_4821 : value.trim(),
+              final updatedNote = note.copyWith(
+                title: value.trim().isEmpty
+                    ? LocalizationService.instance.current.untitledNote_4821
+                    : value.trim(),
                 updatedAt: DateTime.now(),
               );
               widget.onStickyNoteUpdated(updatedNote);
@@ -365,7 +376,7 @@ final updatedNote = note.copyWith(
           onTapOutside: (event) {
             // 当用户点击输入框外部时保存标题
             if (controller.text.trim() != note.title) {
-final updatedNote = note.copyWith(
+              final updatedNote = note.copyWith(
                 title: controller.text.trim().isEmpty
                     ? LocalizationService.instance.current.untitledNote_4721
                     : controller.text.trim(),
@@ -379,7 +390,7 @@ final updatedNote = note.copyWith(
           onEditingComplete: () {
             // 当用户完成编辑时保存标题
             if (controller.text.trim() != note.title) {
-final updatedNote = note.copyWith(
+              final updatedNote = note.copyWith(
                 title: controller.text.trim().isEmpty
                     ? LocalizationService.instance.current.untitledNote_4721
                     : controller.text.trim(),
@@ -409,7 +420,10 @@ final updatedNote = note.copyWith(
           // 透明度滑块
           Row(
             children: [
-Text(LocalizationService.instance.current.opacityLabel_7281, style: TextStyle(fontSize: 11)),
+              Text(
+                LocalizationService.instance.current.opacityLabel_7281,
+                style: TextStyle(fontSize: 11),
+              ),
               const SizedBox(width: 3),
               Flexible(
                 child: Slider(
@@ -496,8 +510,16 @@ Text(LocalizationService.instance.current.opacityLabel_7281, style: TextStyle(fo
                   note.backgroundImageData != null ? Icons.edit : Icons.upload,
                   size: 20,
                 ),
-title: Text(
-                  note.backgroundImageData != null ? LocalizationService.instance.current.changeBackgroundImage_5421 : LocalizationService.instance.current.uploadBackgroundImage_5421,
+                title: Text(
+                  note.backgroundImageData != null
+                      ? LocalizationService
+                            .instance
+                            .current
+                            .changeBackgroundImage_5421
+                      : LocalizationService
+                            .instance
+                            .current
+                            .uploadBackgroundImage_5421,
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -507,7 +529,12 @@ title: Text(
               if (note.backgroundImageData != null) ...[
                 ListTile(
                   leading: const Icon(Icons.settings, size: 20),
-title: Text(LocalizationService.instance.current.backgroundImageSetting_4271),
+                  title: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .backgroundImageSetting_4271,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _showBackgroundImageSettings(context, note);
@@ -515,7 +542,12 @@ title: Text(LocalizationService.instance.current.backgroundImageSetting_4271),
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline, size: 20),
-title: Text(LocalizationService.instance.current.removeBackgroundImage_4271),
+                  title: Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .removeBackgroundImage_4271,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _removeBackgroundImage(note);
@@ -543,12 +575,20 @@ title: Text(LocalizationService.instance.current.removeBackgroundImage_4271),
         );
 
         widget.onStickyNoteUpdated(updatedNote);
-widget.onSuccess?.call(LocalizationService.instance.current.backgroundImageUploaded_4821);
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.backgroundImageUploaded_4821,
+        );
 
-debugPrint(LocalizationService.instance.current.noteBackgroundImageUploaded(imageData.length));
+        debugPrint(
+          LocalizationService.instance.current.noteBackgroundImageUploaded(
+            imageData.length,
+          ),
+        );
       }
     } catch (e) {
-widget.onError?.call(LocalizationService.instance.current.imageUploadFailed(e));
+      widget.onError?.call(
+        LocalizationService.instance.current.imageUploadFailed(e),
+      );
     }
   }
 
@@ -557,20 +597,50 @@ widget.onError?.call(LocalizationService.instance.current.imageUploadFailed(e));
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-title: Text(LocalizationService.instance.current.backgroundImageSetting_4271),
+        title: Text(
+          LocalizationService.instance.current.backgroundImageSetting_4271,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // 图片适应方式
             DropdownButtonFormField<BoxFit>(
               value: note.backgroundImageFit,
-decoration: InputDecoration(labelText: LocalizationService.instance.current.imageFitMethod_7281),
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.imageFitMethod_7281,
+              ),
               items: [
-DropdownMenuItem(value: BoxFit.cover, child: Text(LocalizationService.instance.current.boxFitCover_7285)),
-DropdownMenuItem(value: BoxFit.contain, child: Text(LocalizationService.instance.current.boxFitContain_7281)),
-DropdownMenuItem(value: BoxFit.fill, child: Text(LocalizationService.instance.current.boxFitFill_4821)),
-DropdownMenuItem(value: BoxFit.fitWidth, child: Text(LocalizationService.instance.current.fitWidthOption_4821)),
-DropdownMenuItem(value: BoxFit.fitHeight, child: Text(LocalizationService.instance.current.fitHeight_4821)),
+                DropdownMenuItem(
+                  value: BoxFit.cover,
+                  child: Text(
+                    LocalizationService.instance.current.boxFitCover_7285,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: BoxFit.contain,
+                  child: Text(
+                    LocalizationService.instance.current.boxFitContain_7281,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: BoxFit.fill,
+                  child: Text(
+                    LocalizationService.instance.current.boxFitFill_4821,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: BoxFit.fitWidth,
+                  child: Text(
+                    LocalizationService.instance.current.fitWidthOption_4821,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: BoxFit.fitHeight,
+                  child: Text(
+                    LocalizationService.instance.current.fitHeight_4821,
+                  ),
+                ),
               ],
               onChanged: (BoxFit? value) {
                 if (value != null) {
@@ -585,7 +655,11 @@ DropdownMenuItem(value: BoxFit.fitHeight, child: Text(LocalizationService.instan
             const SizedBox(height: 16),
 
             // 背景图片透明度
-Text(LocalizationService.instance.current.backgroundImageOpacityLabel((note.backgroundImageOpacity * 100).round())),
+            Text(
+              LocalizationService.instance.current.backgroundImageOpacityLabel(
+                (note.backgroundImageOpacity * 100).round(),
+              ),
+            ),
             Slider(
               value: note.backgroundImageOpacity,
               min: 0.0,
@@ -604,7 +678,7 @@ Text(LocalizationService.instance.current.backgroundImageOpacityLabel((note.back
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-child: Text(LocalizationService.instance.current.closeButton_7421),
+            child: Text(LocalizationService.instance.current.closeButton_7421),
           ),
         ],
       ),
@@ -619,14 +693,16 @@ child: Text(LocalizationService.instance.current.closeButton_7421),
       updatedAt: DateTime.now(),
     );
     widget.onStickyNoteUpdated(updatedNote);
-widget.onSuccess?.call(LocalizationService.instance.current.backgroundImageRemoved_4821);
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.backgroundImageRemoved_4821,
+    );
   }
 
   /// 显示颜色选择器
   void _showColorPicker(BuildContext context, StickyNote note) {
     showDialog<Color>(
       context: context,
-builder: (context) => ColorPickerDialog(
+      builder: (context) => ColorPickerDialog(
         initialColor: note.backgroundColor,
         title: LocalizationService.instance.current.selectNoteColor_7281,
       ),
@@ -667,19 +743,21 @@ builder: (context) => ColorPickerDialog(
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-title: Text(LocalizationService.instance.current.deleteNote_7421),
-content: Text(LocalizationService.instance.current.confirmDeleteNote(note.title)),
+        title: Text(LocalizationService.instance.current.deleteNote_7421),
+        content: Text(
+          LocalizationService.instance.current.confirmDeleteNote(note.title),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-child: Text(LocalizationService.instance.current.cancelButton_4271),
+            child: Text(LocalizationService.instance.current.cancelButton_4271),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               widget.onStickyNoteDeleted(note);
             },
-child: Text(LocalizationService.instance.current.delete_7281),
+            child: Text(LocalizationService.instance.current.delete_7281),
           ),
         ],
       ),
@@ -707,7 +785,7 @@ child: Text(LocalizationService.instance.current.delete_7281),
             children: [
               const Icon(Icons.copy, size: 16),
               const SizedBox(width: 8),
-              Text(LocalizationService.instance.current.copyNote_7281)
+              Text(LocalizationService.instance.current.copyNote_7281),
             ],
           ),
         ),
@@ -720,7 +798,11 @@ child: Text(LocalizationService.instance.current.delete_7281),
                 size: 16,
               ),
               const SizedBox(width: 8),
-Text(note.isCollapsed ? LocalizationService.instance.current.expandNote_5421 : LocalizationService.instance.current.collapseNote_5421),
+              Text(
+                note.isCollapsed
+                    ? LocalizationService.instance.current.expandNote_5421
+                    : LocalizationService.instance.current.collapseNote_5421,
+              ),
             ],
           ),
         ),
@@ -730,7 +812,7 @@ Text(note.isCollapsed ? LocalizationService.instance.current.expandNote_5421 : L
             children: [
               const Icon(Icons.vertical_align_top, size: 16),
               const SizedBox(width: 8),
-              Text(LocalizationService.instance.current.moveToTop_7281)
+              Text(LocalizationService.instance.current.moveToTop_7281),
             ],
           ),
         ),
@@ -761,7 +843,9 @@ Text(note.isCollapsed ? LocalizationService.instance.current.expandNote_5421 : L
   void _duplicateStickyNote(StickyNote note) {
     // TODO: 当前接口设计限制，复制功能需要在上层组件中实现
     // 这里先显示提示信息，实际复制逻辑需要在MapItem级别处理
-widget.onSuccess?.call(LocalizationService.instance.current.copyFeatureComingSoon_7281);
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.copyFeatureComingSoon_7281,
+    );
   }
 
   /// 切换折叠状态
@@ -785,7 +869,9 @@ widget.onSuccess?.call(LocalizationService.instance.current.copyFeatureComingSoo
       updatedAt: DateTime.now(),
     );
     widget.onStickyNoteUpdated(updatedNote);
-widget.onSuccess?.call(LocalizationService.instance.current.noteMovedToTop1234);
+    widget.onSuccess?.call(
+      LocalizationService.instance.current.noteMovedToTop1234,
+    );
   }
 
   /// 构建便签标签管理区域
@@ -812,7 +898,7 @@ widget.onSuccess?.call(LocalizationService.instance.current.noteMovedToTop1234);
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 6),
-Text(
+              Text(
                 LocalizationService.instance.current.label_5421,
                 style: TextStyle(
                   fontSize: 12,
@@ -833,7 +919,7 @@ Text(
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-child: Text(
+                    child: Text(
                       LocalizationService.instance.current.management_4821,
                       style: TextStyle(
                         fontSize: 10,
@@ -855,10 +941,12 @@ child: Text(
   void _showStickyNoteTagsManagerDialog(StickyNote note) async {
     final currentTags = note.tags ?? [];
 
-final result = await TagsManagerUtils.showTagsDialog(
+    final result = await TagsManagerUtils.showTagsDialog(
       context,
       initialTags: currentTags,
-      title: LocalizationService.instance.current.manageNoteTagsTitle(note.title),
+      title: LocalizationService.instance.current.manageNoteTagsTitle(
+        note.title,
+      ),
       maxTags: 10, // LocalizationService.instance.current.maxTagsLimit
       suggestedTags: _getStickyNoteSuggestedTags(),
       tagValidator: TagsManagerUtils.defaultTagValidator,
@@ -873,9 +961,13 @@ final result = await TagsManagerUtils.showTagsDialog(
       widget.onStickyNoteUpdated(updatedNote);
 
       if (result.isEmpty) {
-widget.onSuccess?.call(LocalizationService.instance.current.notesTagsCleared_7281);
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.notesTagsCleared_7281,
+        );
       } else {
-widget.onSuccess?.call(LocalizationService.instance.current.noteTagsUpdated(result.length));
+        widget.onSuccess?.call(
+          LocalizationService.instance.current.noteTagsUpdated(result.length),
+        );
       }
     }
   }
@@ -883,7 +975,7 @@ widget.onSuccess?.call(LocalizationService.instance.current.noteTagsUpdated(resu
   /// 构建便签标签显示
   Widget _buildStickyNoteTagsDisplay(List<String> tags) {
     if (tags.isEmpty) {
-return Text(
+      return Text(
         LocalizationService.instance.current.noTagsAvailable_7281,
         style: TextStyle(
           fontSize: 11,
@@ -919,7 +1011,7 @@ return Text(
 
   /// 获取便签建议标签
   List<String> _getStickyNoteSuggestedTags() {
-return [
+    return [
       LocalizationService.instance.current.important_1234,
       LocalizationService.instance.current.todo_5678,
       LocalizationService.instance.current.completed_9012,

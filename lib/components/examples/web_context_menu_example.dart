@@ -73,7 +73,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
             ContextMenuWrapper(
               menuBuilder: (context) => [
                 ContextMenuItem(
-                  label: '复制',
+                  label: LocalizationService.instance.current.copy_4821,
                   icon: Icons.copy,
                   onTap: () => _showSnackBar(
                     context,
@@ -90,7 +90,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                 ),
                 const ContextMenuItem.divider(),
                 ContextMenuItem(
-                  label: '删除',
+                  label: LocalizationService.instance.current.delete_4821,
                   icon: Icons.delete,
                   onTap: () => _showSnackBar(
                     context,
@@ -144,7 +144,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ),
                 ),
                 ContextMenuItem(
-                  label: '旋转',
+                  label: LocalizationService.instance.current.rotate_4822,
                   icon: Icons.rotate_right,
                   onTap: () => _showSnackBar(
                     context,
@@ -152,7 +152,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ),
                 ),
                 ContextMenuItem(
-                  label: '缩放',
+                  label: LocalizationService.instance.current.zoom_4821,
                   icon: Icons.zoom_in,
                   onTap: () => _showSnackBar(
                     context,
@@ -169,7 +169,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ),
                 ),
                 ContextMenuItem(
-                  label: '导出',
+                  label: LocalizationService.instance.current.exportLabel_7421,
                   icon: Icons.file_download,
                   onTap: () => _showSnackBar(
                     context,
@@ -178,7 +178,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                 ),
                 const ContextMenuItem.divider(),
                 ContextMenuItem(
-                  label: '属性',
+                  label: LocalizationService.instance.current.properties_4281,
                   icon: Icons.info,
                   onTap: () => _showSnackBar(
                     context,
@@ -232,7 +232,8 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
               return ContextMenuWrapper(
                 menuBuilder: (context) => [
                   ContextMenuItem(
-                    label: '查看详情',
+                    label:
+                        LocalizationService.instance.current.viewDetails_4821,
                     icon: Icons.visibility,
                     onTap: () => _showSnackBar(
                       context,
@@ -253,7 +254,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                   ),
                   const ContextMenuItem.divider(),
                   ContextMenuItem(
-                    label: '复制链接',
+                    label: LocalizationService.instance.current.copyLink_4821,
                     icon: Icons.link,
                     onTap: () => _showSnackBar(
                       context,
@@ -263,7 +264,7 @@ class WebCompatibleContextMenuExample extends StatelessWidget {
                     ),
                   ),
                   ContextMenuItem(
-                    label: '分享',
+                    label: LocalizationService.instance.current.share_4821,
                     icon: Icons.share,
                     onTap: () => _showSnackBar(
                       context,

@@ -1004,11 +1004,13 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
           }
         } catch (e) {
           if (mounted) {
-            String errorMessage = '添加颜色失败';
+            String errorMessage =
+                LocalizationService.instance.current.addColorFailed_4829;
             if (e.toString().contains(
               LocalizationService.instance.current.colorAlreadyExists_7281,
             )) {
-              errorMessage = '该颜色已存在于自定义颜色中';
+              errorMessage =
+                  LocalizationService.instance.current.colorAlreadyExists_1537;
             } else {
               errorMessage = LocalizationService.instance.current
                   .addColorFailed(e);
@@ -1352,10 +1354,10 @@ class _DrawingToolbarOptimizedState extends State<DrawingToolbarOptimized> {
               ),
               const SizedBox(height: 4),
               Text(
-                '1. 点击"上传图片"选择文件或"剪贴板"粘贴图片\n'
-                '2. 在画布上拖拽创建选区\n'
-                '3. 图片将自动适应选区大小\n'
-                '4. 可通过Z层级检视器调整',
+                LocalizationService
+                    .instance
+                    .current
+                    .imageUploadInstructions_4821,
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(

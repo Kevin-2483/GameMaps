@@ -1,6 +1,6 @@
 // This file has been processed by AI for internationalization
 /// 计时器数据模型
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 class TimerData {

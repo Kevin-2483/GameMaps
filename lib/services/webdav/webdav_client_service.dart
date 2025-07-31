@@ -169,7 +169,8 @@ class WebDavClientService {
     } catch (e) {
       stopwatch.stop();
 
-      String errorMessage = '连接失败';
+      String errorMessage =
+          LocalizationService.instance.current.connectionFailed_9372;
       if (e.toString().contains('401') ||
           e.toString().contains('Unauthorized')) {
         errorMessage =
@@ -183,7 +184,7 @@ class WebDavClientService {
             LocalizationService.instance.current.connectionTimeoutError_4821;
       } else {
         errorMessage = LocalizationService.instance.current
-            .connectionFailed_7281(e.toString());
+            .connectionFailedWithError_7281(e.toString());
       }
 
       return WebDavTestResult(

@@ -138,12 +138,15 @@ class _MapEditorContentState extends State<_MapEditorContent>
       }
     } catch (e) {
       if (kDebugMode) {
-debugPrint(LocalizationService.instance.current.getUserPreferenceFailed_4821(e));
+        debugPrint(
+          LocalizationService.instance.current.getUserPreferenceFailed_4821(e),
+        );
       }
     }
 
     // 回退到WebSocket客户端配置中的显示名称
-    return _cachedClientName ?? '未知客户端';
+    return _cachedClientName ??
+        LocalizationService.instance.current.unknownClient_7284;
   }
 
   /// 异步获取并缓存客户端信息
@@ -157,18 +160,25 @@ debugPrint(LocalizationService.instance.current.getUserPreferenceFailed_4821(e))
           _cachedClientName = activeConfig.displayName;
         });
         if (kDebugMode) {
-debugPrint(
-            LocalizationService.instance.current.clientInfoLoaded(activeConfig.clientId, activeConfig.displayName),
+          debugPrint(
+            LocalizationService.instance.current.clientInfoLoaded(
+              activeConfig.clientId,
+              activeConfig.displayName,
+            ),
           );
         }
       } else {
         if (kDebugMode) {
-debugPrint(LocalizationService.instance.current.noActiveClientConfig_7281);
+          debugPrint(
+            LocalizationService.instance.current.noActiveClientConfig_7281,
+          );
         }
       }
     } catch (e) {
       if (kDebugMode) {
-debugPrint(LocalizationService.instance.current.clientInfoFetchFailed(e));
+        debugPrint(
+          LocalizationService.instance.current.clientInfoFetchFailed(e),
+        );
       }
     }
   }
@@ -302,41 +312,55 @@ debugPrint(LocalizationService.instance.current.clientInfoFetchFailed(e));
     // 在页面销毁时尝试保存面板状态（异步但不等待）
     if (_panelStatesChanged && mounted) {
       _savePanelStatesOnExit().catchError((e) {
-debugPrint(LocalizationService.instance.current.savePanelStateFailed_7421(e));
+        debugPrint(
+          LocalizationService.instance.current.savePanelStateFailed_7421(e),
+        );
       });
     }
 
     // 保存智能隐藏状态到扩展存储（现在使用保存的引用，不访问context）
     if (_currentMap != null) {
       _saveLegendGroupSmartHideStatesOnExit().catchError((e) {
-debugPrint(LocalizationService.instance.current.saveSmartHideStateFailed_7285(e));
+        debugPrint(
+          LocalizationService.instance.current.saveSmartHideStateFailed_7285(e),
+        );
       });
 
       // 保存缩放因子状态到扩展存储
       _saveLegendGroupZoomFactorsOnExit().catchError((e) {
-debugPrint(LocalizationService.instance.current.saveScaleFactorFailed_7285(e));
+        debugPrint(
+          LocalizationService.instance.current.saveScaleFactorFailed_7285(e),
+        );
       });
     }
 
     // 清理图例缓存管理器的所有缓存
     try {
       LegendCacheManager().clearAllCache();
-debugPrint(LocalizationService.instance.current.mapEditorExitCleanup_4821);
+      debugPrint(
+        LocalizationService.instance.current.mapEditorExitCleanup_4821,
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.legendCacheCleanupFailed_7285(e));
+      debugPrint(
+        LocalizationService.instance.current.legendCacheCleanupFailed_7285(e),
+      );
     }
 
     // 清理颜色滤镜会话管理器的所有滤镜
     try {
       ColorFilterSessionManager().clearAllFilters();
-debugPrint(LocalizationService.instance.current.mapEditorExitMessage_4821);
+      debugPrint(
+        LocalizationService.instance.current.mapEditorExitMessage_4821,
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.colorFilterCleanupError_4821(e));
+      debugPrint(
+        LocalizationService.instance.current.colorFilterCleanupError_4821(e),
+      );
     }
 
     // 释放在线状态管理资源
     disposeCollaboration();
-debugPrint(LocalizationService.instance.current.resourceReleased_4821);
+    debugPrint(LocalizationService.instance.current.resourceReleased_4821);
 
     // 释放响应式系统资源
     disposeReactiveIntegration();
@@ -401,7 +425,11 @@ debugPrint(LocalizationService.instance.current.resourceReleased_4821);
       }
     }
 
-debugPrint(LocalizationService.instance.current.legendGroupSmartHideInitialized(_legendGroupSmartHideStates));
+    debugPrint(
+      LocalizationService.instance.current.legendGroupSmartHideInitialized(
+        _legendGroupSmartHideStates,
+      ),
+    );
   }
 
   /// 初始化图例组缩放因子状态
@@ -428,7 +456,11 @@ debugPrint(LocalizationService.instance.current.legendGroupSmartHideInitialized(
       }
     }
 
-debugPrint(LocalizationService.instance.current.legendGroupZoomFactorInitialized(_legendGroupZoomFactors));
+    debugPrint(
+      LocalizationService.instance.current.legendGroupZoomFactorInitialized(
+        _legendGroupZoomFactors,
+      ),
+    );
   }
 
   /// 获取图例组智能隐藏状态
@@ -455,7 +487,12 @@ debugPrint(LocalizationService.instance.current.legendGroupZoomFactorInitialized
       );
     }
 
-debugPrint(LocalizationService.instance.current.legendGroupSmartHideStatusUpdated(legendGroupId, enabled));
+    debugPrint(
+      LocalizationService.instance.current.legendGroupSmartHideStatusUpdated(
+        legendGroupId,
+        enabled,
+      ),
+    );
   }
 
   /// 获取图例组缩放因子
@@ -482,7 +519,12 @@ debugPrint(LocalizationService.instance.current.legendGroupSmartHideStatusUpdate
       );
     }
 
-debugPrint(LocalizationService.instance.current.legendGroupZoomUpdated_7281(legendGroupId, zoomFactor));
+    debugPrint(
+      LocalizationService.instance.current.legendGroupZoomUpdated_7281(
+        legendGroupId,
+        zoomFactor,
+      ),
+    );
   }
 
   /// 处理从缓存拖拽图例到画布
@@ -516,13 +558,20 @@ debugPrint(LocalizationService.instance.current.legendGroupZoomUpdated_7281(lege
           _currentLegendGroupForManagement!.id,
         );
         legendSize = zoomFactor / currentZoomLevel;
-debugPrint(
-          LocalizationService.instance.current.dynamicFormulaLegendSizeCalculation(zoomFactor, currentZoomLevel, legendSize),
+        debugPrint(
+          LocalizationService.instance.current
+              .dynamicFormulaLegendSizeCalculation(
+                zoomFactor,
+                currentZoomLevel,
+                legendSize,
+              ),
         );
       } else {
         // 使用固定大小
         legendSize = defaultLegendSize;
-debugPrint(LocalizationService.instance.current.fixedLegendSizeUsage(legendSize));
+        debugPrint(
+          LocalizationService.instance.current.fixedLegendSizeUsage(legendSize),
+        );
       }
 
       // 使用LegendPathResolver处理路径占位符
@@ -556,32 +605,51 @@ debugPrint(LocalizationService.instance.current.fixedLegendSizeUsage(legendSize)
         updatedAt: now,
       );
 
-debugPrint(
-        LocalizationService.instance.current.dragToAddLegendItem_7421(newItem.id, newItem.legendId ?? 'null'),
+      debugPrint(
+        LocalizationService.instance.current.dragToAddLegendItem_7421(
+          newItem.id,
+          newItem.legendId ?? 'null',
+        ),
       );
-debugPrint(
-        LocalizationService.instance.current.legendCountBeforeUpdate(_currentLegendGroupForManagement!.legendItems.length),
+      debugPrint(
+        LocalizationService.instance.current.legendCountBeforeUpdate(
+          _currentLegendGroupForManagement!.legendItems.length,
+        ),
       );
-debugPrint(LocalizationService.instance.current.updatedLegendCount(updatedGroup.legendItems.length));
+      debugPrint(
+        LocalizationService.instance.current.updatedLegendCount(
+          updatedGroup.legendItems.length,
+        ),
+      );
 
       // 更新图例组
       _updateLegendGroup(updatedGroup);
 
       // 显示成功提示
       if (mounted) {
-context.showSuccessSnackBar(
-          LocalizationService.instance.current.legendAddedToGroup(updatedGroup.name, updatedGroup.legendItems.length),
+        context.showSuccessSnackBar(
+          LocalizationService.instance.current.legendAddedToGroup(
+            updatedGroup.name,
+            updatedGroup.legendItems.length,
+          ),
         );
       }
 
-debugPrint(LocalizationService.instance.current.dragLegendFromCache(legendPath, canvasPosition));
+      debugPrint(
+        LocalizationService.instance.current.dragLegendFromCache(
+          legendPath,
+          canvasPosition,
+        ),
+      );
     }
   }
 
   /// 处理拖拽开始 - 临时关闭抽屉
   void _handleDragStart() {
     if (_isLegendGroupManagementDrawerOpen && !_isDragTemporaryHidden) {
-debugPrint(LocalizationService.instance.current.dragStartCloseDrawer_4821);
+      debugPrint(
+        LocalizationService.instance.current.dragStartCloseDrawer_4821,
+      );
       setState(() {
         _isDragTemporaryHidden = true;
         _hiddenLegendGroupForDrag = _currentLegendGroupForManagement;
@@ -592,13 +660,15 @@ debugPrint(LocalizationService.instance.current.dragStartCloseDrawer_4821);
 
   /// 处理拖拽结束 - 重新打开抽屉
   void _handleDragEnd() {
-debugPrint(LocalizationService.instance.current.dragEndCheckDrawer_4821);
+    debugPrint(LocalizationService.instance.current.dragEndCheckDrawer_4821);
     debugPrint('  _isDragTemporaryHidden: $_isDragTemporaryHidden');
     debugPrint('  _wasDrawerOpenBeforeDrag: $_wasDrawerOpenBeforeDrag');
     debugPrint('  _hiddenLegendGroupForDrag: $_hiddenLegendGroupForDrag');
 
     if (_isDragTemporaryHidden && _wasDrawerOpenBeforeDrag) {
-debugPrint(LocalizationService.instance.current.dragEndReopenLegendDrawer_7281);
+      debugPrint(
+        LocalizationService.instance.current.dragEndReopenLegendDrawer_7281,
+      );
       setState(() {
         _isDragTemporaryHidden = false;
         // 保持原来的状态不变，只取消临时隐藏
@@ -637,9 +707,15 @@ debugPrint(LocalizationService.instance.current.dragEndReopenLegendDrawer_7281);
         }
       }
 
-debugPrint(LocalizationService.instance.current.mapLegendAutoHideStatusSaved(_currentMap!.title));
+      debugPrint(
+        LocalizationService.instance.current.mapLegendAutoHideStatusSaved(
+          _currentMap!.title,
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.saveLegendGroupStateFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.saveLegendGroupStateFailed(e),
+      );
     }
   }
 
@@ -672,9 +748,15 @@ debugPrint(LocalizationService.instance.current.saveLegendGroupStateFailed(e));
         }
       }
 
-debugPrint(LocalizationService.instance.current.mapLegendScaleSaved(_currentMap!.title));
+      debugPrint(
+        LocalizationService.instance.current.mapLegendScaleSaved(
+          _currentMap!.title,
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.saveLegendScaleFactorFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.saveLegendScaleFactorFailed(e),
+      );
     }
   }
 
@@ -685,7 +767,9 @@ debugPrint(LocalizationService.instance.current.saveLegendScaleFactorFailed(e));
     try {
       // 1. 首先初始化响应式系统（传递地图绝对路径）
       await initializeReactiveSystem(mapAbsolutePath: widget.absoluteMapPath);
-debugPrint(LocalizationService.instance.current.responsiveSystemInitialized_7281);
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemInitialized_7281,
+      );
 
       // 2. 然后加载地图数据
       await _loadMapData();
@@ -693,7 +777,11 @@ debugPrint(LocalizationService.instance.current.responsiveSystemInitialized_7281
       // 3. 将地图数据立即加载到响应式系统
       if (_currentMap != null) {
         await loadMapToReactiveSystem(_currentMap!);
-        debugPrint('地图数据已加载到响应式系统: ${_currentMap!.title}');
+        debugPrint(
+          LocalizationService.instance.current.mapDataLoadedToReactiveSystem(
+            _currentMap!.title,
+          ),
+        );
 
         // 4. 设置响应式监听器，确保数据同步
         _setupReactiveListeners();
@@ -703,7 +791,9 @@ debugPrint(LocalizationService.instance.current.responsiveSystemInitialized_7281
 
         // 6. 初始化在线状态管理
         await initializeCollaboration();
-debugPrint(LocalizationService.instance.current.onlineStatusInitComplete_4821);
+        debugPrint(
+          LocalizationService.instance.current.onlineStatusInitComplete_4821,
+        );
 
         // 7. 进入地图编辑器模式，设置地图信息用于协作
         await enterMapEditor(
@@ -711,17 +801,33 @@ debugPrint(LocalizationService.instance.current.onlineStatusInitComplete_4821);
           mapTitle: _currentMap!.title,
           mapCover: _currentMap!.imageData,
         );
-debugPrint(LocalizationService.instance.current.enteredMapEditorMode(_currentMap!.title));
+        debugPrint(
+          LocalizationService.instance.current.enteredMapEditorMode(
+            _currentMap!.title,
+          ),
+        );
       } // 8. 重新初始化脚本引擎以确保外部函数声明正确
       await reactiveIntegration.newScriptManager.initialize();
-debugPrint(LocalizationService.instance.current.scriptEngineReinitialized_4821);
+      debugPrint(
+        LocalizationService.instance.current.scriptEngineReinitialized_4821,
+      );
 
       // 9. 初始化键盘快捷键操作实例
       _initializeKeyboardShortcutActions();
-debugPrint(LocalizationService.instance.current.keyboardShortcutsInitialized_7421);
+      debugPrint(
+        LocalizationService.instance.current.keyboardShortcutsInitialized_7421,
+      );
     } catch (e) {
-_showErrorSnackBar(LocalizationService.instance.current.mapInitializationFailed_7421(e.toString()));
-debugPrint(LocalizationService.instance.current.mapAndResponsiveSystemInitFailed(e));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.mapInitializationFailed_7421(
+          e.toString(),
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.mapAndResponsiveSystemInitFailed(
+          e,
+        ),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -739,11 +845,17 @@ debugPrint(LocalizationService.instance.current.mapAndResponsiveSystemInitFailed
           widget.folderPath,
         );
         if (loadedMap == null) {
-throw Exception(LocalizationService.instance.current.mapNotFoundWithTitle(widget.mapTitle ?? 'null'));
+          throw Exception(
+            LocalizationService.instance.current.mapNotFoundWithTitle(
+              widget.mapTitle ?? 'null',
+            ),
+          );
         }
         _currentMap = loadedMap;
       } else {
-throw Exception(LocalizationService.instance.current.mapItemAndTitleEmpty_9274);
+        throw Exception(
+          LocalizationService.instance.current.mapItemAndTitleEmpty_9274,
+        );
       }
 
       // 移除预载图例，改为按需载入
@@ -766,9 +878,15 @@ throw Exception(LocalizationService.instance.current.mapItemAndTitleEmpty_9274);
       // 初始化图例组缩放因子状态
       _initializeLegendGroupZoomFactors();
 
-debugPrint(LocalizationService.instance.current.mapDataLoaded_7421(_currentMap!.title));
+      debugPrint(
+        LocalizationService.instance.current.mapDataLoaded_7421(
+          _currentMap!.title,
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.mapDataLoadFailed_7284(e));
+      debugPrint(
+        LocalizationService.instance.current.mapDataLoadFailed_7284(e),
+      );
       rethrow;
     }
   }
@@ -837,12 +955,20 @@ debugPrint(LocalizationService.instance.current.mapDataLoadFailed_7284(e));
   /// 初始化响应式版本管理系统
   Future<void> _initializeReactiveVersionManagement() async {
     if (_currentMap == null) {
-debugPrint(LocalizationService.instance.current.failedToInitializeReactiveVersionManagement_7285);
+      debugPrint(
+        LocalizationService
+            .instance
+            .current
+            .failedToInitializeReactiveVersionManagement_7285,
+      );
       return;
     }
 
     try {
-debugPrint(LocalizationService.instance.current.initializingReactiveVersionManagement(_currentMap!.title));
+      debugPrint(
+        LocalizationService.instance.current
+            .initializingReactiveVersionManagement(_currentMap!.title),
+      );
 
       // 初始化响应式版本管理（重构后通过集成适配器）
       initializeVersionManagement(
@@ -851,20 +977,32 @@ debugPrint(LocalizationService.instance.current.initializingReactiveVersionManag
         folderPath: widget.folderPath,
       );
 
-debugPrint(LocalizationService.instance.current.responsiveVersionManagerCreated_4821);
+      debugPrint(
+        LocalizationService
+            .instance
+            .current
+            .responsiveVersionManagerCreated_4821,
+      );
 
       // 加载VFS中所有已存储的版本
       await _loadExistingVersionsFromVfs(); // 确保默认版本存在并开始编辑
       bool shouldStartEditingDefault = false;
       if (!allVersionStates.any((v) => v.versionId == 'default')) {
-final defaultVersionState = await createVersion(
+        final defaultVersionState = await createVersion(
           'default',
-          versionName: LocalizationService.instance.current.defaultVersionName_4821,
+          versionName:
+              LocalizationService.instance.current.defaultVersionName_4821,
         );
-debugPrint(LocalizationService.instance.current.defaultVersionCreated_7281(defaultVersionState?.versionId ?? 'null'));
+        debugPrint(
+          LocalizationService.instance.current.defaultVersionCreated_7281(
+            defaultVersionState?.versionId ?? 'null',
+          ),
+        );
         // 新创建的版本会自动切换并开始编辑，不需要额外设置
       } else {
-debugPrint(LocalizationService.instance.current.defaultVersionExists_7281);
+        debugPrint(
+          LocalizationService.instance.current.defaultVersionExists_7281,
+        );
         shouldStartEditingDefault = true;
       }
 
@@ -874,12 +1012,21 @@ debugPrint(LocalizationService.instance.current.defaultVersionExists_7281);
         if (shouldStartEditingDefault ||
             allVersionStates.any((v) => v.versionId == 'default')) {
           versionAdapter?.versionManager.startEditingVersion('default');
-debugPrint(LocalizationService.instance.current.startEditingDefaultVersion_7281);
+          debugPrint(
+            LocalizationService
+                .instance
+                .current
+                .startEditingDefaultVersion_7281,
+          );
         } else if (allVersionStates.isNotEmpty) {
           // 如果没有默认版本但有其他版本，开始编辑第一个版本
           final firstVersionId = allVersionStates.first.versionId;
           versionAdapter?.versionManager.startEditingVersion(firstVersionId);
-debugPrint(LocalizationService.instance.current.startEditingFirstVersion_7281(firstVersionId));
+          debugPrint(
+            LocalizationService.instance.current.startEditingFirstVersion_7281(
+              firstVersionId,
+            ),
+          );
         }
       }
 
@@ -901,14 +1048,24 @@ debugPrint(LocalizationService.instance.current.startEditingFirstVersion_7281(fi
             setState(() {
               // 当版本状态变化时，触发UI重建
             });
-debugPrint(LocalizationService.instance.current.versionStatusUpdated_7281(allVersionStates.length));
+            debugPrint(
+              LocalizationService.instance.current.versionStatusUpdated_7281(
+                allVersionStates.length,
+              ),
+            );
           }
         });
       }
 
-debugPrint(LocalizationService.instance.current.versionSystemInitialized(currentVersionId ?? 'null'));
+      debugPrint(
+        LocalizationService.instance.current.versionSystemInitialized(
+          currentVersionId ?? 'null',
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveVersionInitFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.responsiveVersionInitFailed(e),
+      );
     }
   }
 
@@ -917,7 +1074,7 @@ debugPrint(LocalizationService.instance.current.responsiveVersionInitFailed(e));
       // 获取当前响应式系统的数据状态
       final currentMapData = getCurrentMapData();
       if (currentMapData == null) {
-debugPrint(LocalizationService.instance.current.noDataSkipSync_4821);
+        debugPrint(LocalizationService.instance.current.noDataSkipSync_4821);
         return;
       }
 
@@ -925,7 +1082,9 @@ debugPrint(LocalizationService.instance.current.noDataSkipSync_4821);
       final activeVersionId =
           versionAdapter?.versionManager.activeEditingVersionId;
       if (activeVersionId == null) {
-debugPrint(LocalizationService.instance.current.noEditingVersionSkipSync_7281);
+        debugPrint(
+          LocalizationService.instance.current.noEditingVersionSkipSync_7281,
+        );
         return;
       }
 
@@ -944,17 +1103,27 @@ debugPrint(LocalizationService.instance.current.noEditingVersionSkipSync_7281);
         markAsChanged: false, // 初始同步不标记为已修改
       );
 
-debugPrint(
-        LocalizationService.instance.current.initialDataSyncComplete(activeVersionId, mapItemToSync.layers.length, mapItemToSync.stickyNotes.length),
+      debugPrint(
+        LocalizationService.instance.current.initialDataSyncComplete(
+          activeVersionId,
+          mapItemToSync.layers.length,
+          mapItemToSync.stickyNotes.length,
+        ),
       );
 
       // 详细日志：便签绘画元素数量
       for (int i = 0; i < mapItemToSync.stickyNotes.length; i++) {
         final note = mapItemToSync.stickyNotes[i];
-debugPrint(LocalizationService.instance.current.syncNoteDebug_7421(i, note.title, note.elements.length));
+        debugPrint(
+          LocalizationService.instance.current.syncNoteDebug_7421(
+            i,
+            note.title,
+            note.elements.length,
+          ),
+        );
       }
     } catch (e) {
-debugPrint(LocalizationService.instance.current.syncDataFailed_7285(e));
+      debugPrint(LocalizationService.instance.current.syncDataFailed_7285(e));
       // 不抛出异常，允许系统继续工作
     }
   }
@@ -964,21 +1133,32 @@ debugPrint(LocalizationService.instance.current.syncDataFailed_7285(e));
     if (_currentMap == null) return;
 
     try {
-debugPrint(LocalizationService.instance.current.loadingStoredVersionFromVfs_4821);
+      debugPrint(
+        LocalizationService.instance.current.loadingStoredVersionFromVfs_4821,
+      );
 
       // 获取VFS中所有版本ID
       final versionIds = await _vfsMapService.getMapVersions(
         _currentMap!.title,
         widget.folderPath,
       );
-debugPrint(LocalizationService.instance.current.foundStoredVersions_7281(versionIds.length, versionIds));
+      debugPrint(
+        LocalizationService.instance.current.foundStoredVersions_7281(
+          versionIds.length,
+          versionIds,
+        ),
+      );
 
       // 获取所有版本的元数据（包含版本名称）
       final versionNames = await _vfsMapService.getAllVersionNames(
         _currentMap!.title,
         widget.folderPath,
       );
-debugPrint(LocalizationService.instance.current.versionNameMapping_7281(versionNames));
+      debugPrint(
+        LocalizationService.instance.current.versionNameMapping_7281(
+          versionNames,
+        ),
+      );
 
       // 为每个版本创建响应式版本状态并加载完整数据到会话
       for (final versionId in versionIds) {
@@ -987,7 +1167,10 @@ debugPrint(LocalizationService.instance.current.versionNameMapping_7281(versionN
 
           // 检查版本是否已经在响应式系统中
           if (versionAdapter?.versionManager.versionExists(versionId) == true) {
-debugPrint(LocalizationService.instance.current.versionExistsInReactiveSystem_7421(versionId));
+            debugPrint(
+              LocalizationService.instance.current
+                  .versionExistsInReactiveSystem_7421(versionId),
+            );
 
             // 检查是否已有会话数据，如果没有则加载
             final existingState = versionAdapter?.versionManager
@@ -1001,16 +1184,32 @@ debugPrint(LocalizationService.instance.current.versionExistsInReactiveSystem_74
           // 加载版本完整数据到会话中
           await _loadVersionDataToSession(versionId, versionName);
 
-debugPrint(LocalizationService.instance.current.versionLoadedToReactiveSystem(versionId, versionName));
+          debugPrint(
+            LocalizationService.instance.current.versionLoadedToReactiveSystem(
+              versionId,
+              versionName,
+            ),
+          );
         } catch (e) {
-debugPrint(LocalizationService.instance.current.versionLoadFailed_7281(versionId, e));
+          debugPrint(
+            LocalizationService.instance.current.versionLoadFailed_7281(
+              versionId,
+              e,
+            ),
+          );
           // 继续加载其他版本
         }
       }
 
-debugPrint(LocalizationService.instance.current.versionLoadedFromVfs_7281(allVersionStates.length));
+      debugPrint(
+        LocalizationService.instance.current.versionLoadedFromVfs_7281(
+          allVersionStates.length,
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.versionLoadFailure_7285(e));
+      debugPrint(
+        LocalizationService.instance.current.versionLoadFailure_7285(e),
+      );
       // 不抛出异常，允许系统继续工作
     }
   }
@@ -1023,7 +1222,11 @@ debugPrint(LocalizationService.instance.current.versionLoadFailure_7285(e));
     if (_currentMap == null) return;
 
     try {
-debugPrint(LocalizationService.instance.current.startLoadingVersionDataToSession(versionId)); // 从VFS加载该版本的完整数据
+      debugPrint(
+        LocalizationService.instance.current.startLoadingVersionDataToSession(
+          versionId,
+        ),
+      ); // 从VFS加载该版本的完整数据
       final versionLayers = await _vfsMapService.getMapLayers(
         _currentMap!.title,
         versionId,
@@ -1055,12 +1258,22 @@ debugPrint(LocalizationService.instance.current.startLoadingVersionDataToSession
         initialData: versionMapData,
       );
 
-debugPrint(
-        LocalizationService.instance.current.versionDataLoaded(versionId, versionLayers.length, versionLegendGroups.length, versionStickyNotes.length),
+      debugPrint(
+        LocalizationService.instance.current.versionDataLoaded(
+          versionId,
+          versionLayers.length,
+          versionLegendGroups.length,
+          versionStickyNotes.length,
+        ),
       );
     } catch (e) {
       // 如果加载失败，至少创建空的版本状态
-debugPrint(LocalizationService.instance.current.versionLoadFailed_7281(versionId, e));
+      debugPrint(
+        LocalizationService.instance.current.versionLoadFailed_7281(
+          versionId,
+          e,
+        ),
+      );
       versionAdapter?.versionManager.initializeVersion(
         versionId,
         versionName: versionName,
@@ -1073,9 +1286,13 @@ debugPrint(LocalizationService.instance.current.versionLoadFailed_7281(versionId
     // 监听地图数据变化
     mapDataStream.listen((state) {
       if (state is MapDataLoaded) {
-debugPrint(LocalizationService.instance.current.mapDataLoadedEvent_4821);
-debugPrint(
-          LocalizationService.instance.current.responsiveDataLayerOrder(state.layers.map((l) => '${l.name}(${l.order})').toList()),
+        debugPrint(
+          LocalizationService.instance.current.mapDataLoadedEvent_4821,
+        );
+        debugPrint(
+          LocalizationService.instance.current.responsiveDataLayerOrder(
+            state.layers.map((l) => '${l.name}(${l.order})').toList(),
+          ),
         );
 
         // 同步更新传统状态
@@ -1087,8 +1304,13 @@ debugPrint(
               legendGroups: state.legendGroups,
             );
 
-debugPrint(
-              LocalizationService.instance.current.currentMapUpdatedLayersOrder_7421(_currentMap!.layers.map((l) => '${l.name}(${l.order})').toList()),
+            debugPrint(
+              LocalizationService.instance.current
+                  .currentMapUpdatedLayersOrder_7421(
+                    _currentMap!.layers
+                        .map((l) => '${l.name}(${l.order})')
+                        .toList(),
+                  ),
             );
 
             // 同步更新选中图层的引用，确保引用最新的图层对象
@@ -1097,7 +1319,11 @@ debugPrint(
               _selectedLayer = state.layers
                   .where((layer) => layer.id == selectedLayerId)
                   .firstOrNull;
-debugPrint(LocalizationService.instance.current.selectedLayerUpdated_7421(_selectedLayer?.name ?? 'null'));
+              debugPrint(
+                LocalizationService.instance.current.selectedLayerUpdated_7421(
+                  _selectedLayer?.name ?? 'null',
+                ),
+              );
             }
 
             // 同步更新选中图层组的引用
@@ -1111,7 +1337,12 @@ debugPrint(LocalizationService.instance.current.selectedLayerUpdated_7421(_selec
                 updatedGroup.add(updatedLayer);
               }
               _selectedLayerGroup = updatedGroup;
-debugPrint(LocalizationService.instance.current.selectedLayerGroupUpdated_4821);
+              debugPrint(
+                LocalizationService
+                    .instance
+                    .current
+                    .selectedLayerGroupUpdated_4821,
+              );
             }
 
             // 同步更新选中便利贴的引用，确保引用最新的便利贴对象
@@ -1129,8 +1360,11 @@ debugPrint(LocalizationService.instance.current.selectedLayerGroupUpdated_4821);
               _currentLegendGroupForManagement = state.legendGroups
                   .where((group) => group.id == managedGroupId)
                   .firstOrNull;
-debugPrint(
-                LocalizationService.instance.current.legendGroupManagementStatusSynced(_currentLegendGroupForManagement?.name ?? 'null'),
+              debugPrint(
+                LocalizationService.instance.current
+                    .legendGroupManagementStatusSynced(
+                      _currentLegendGroupForManagement?.name ?? 'null',
+                    ),
               );
             }
 
@@ -1139,16 +1373,25 @@ debugPrint(
             _hasUnsavedChanges = hasUnsavedChangesReactive;
 
             // 更新显示顺序
-debugPrint(LocalizationService.instance.current.updateDisplayOrderLog_7281);
+            debugPrint(
+              LocalizationService.instance.current.updateDisplayOrderLog_7281,
+            );
             _updateDisplayOrderAfterLayerChange();
-debugPrint(
-              LocalizationService.instance.current.updateDisplayOrderLog(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
+            debugPrint(
+              LocalizationService.instance.current.updateDisplayOrderLog(
+                _displayOrderLayers
+                    .map((l) => '${l.name}(${l.order})')
+                    .toList(),
+              ),
             );
           });
 
           // 重要：在状态同步后，确保UI能够正确反映更改状态
           // 这样用户就能看到未保存的更改指示
-debugPrint(LocalizationService.instance.current.uiStateSyncedWithUnsavedChanges(_hasUnsavedChanges));
+          debugPrint(
+            LocalizationService.instance.current
+                .uiStateSyncedWithUnsavedChanges(_hasUnsavedChanges),
+          );
         }
       }
     });
@@ -1167,7 +1410,11 @@ debugPrint(LocalizationService.instance.current.uiStateSyncedWithUnsavedChanges(
       setState(() {
         _hasUnsavedChanges = hasUnsavedChangesReactive;
       });
-debugPrint(LocalizationService.instance.current.syncUnsavedStateToUI(_hasUnsavedChanges));
+      debugPrint(
+        LocalizationService.instance.current.syncUnsavedStateToUI(
+          _hasUnsavedChanges,
+        ),
+      );
     }
   }
 
@@ -1176,7 +1423,12 @@ debugPrint(LocalizationService.instance.current.syncUnsavedStateToUI(_hasUnsaved
   void _updateScriptMapDataAccessor() {
     // 新的响应式脚本管理器通过MapDataBloc自动访问地图数据
     // 无需手动设置访问器
-debugPrint(LocalizationService.instance.current.responsiveScriptManagerAccessMapData_4821);
+    debugPrint(
+      LocalizationService
+          .instance
+          .current
+          .responsiveScriptManagerAccessMapData_4821,
+    );
   }
 
   /// 从用户首选项初始化界面布局
@@ -1457,7 +1709,12 @@ debugPrint(LocalizationService.instance.current.responsiveScriptManagerAccessMap
           );
 
           updateStickyNoteReactive(updatedStickyNote);
-debugPrint(LocalizationService.instance.current.deleteStickyNoteElementDebug(_selectedStickyNote!.id, elementId));
+          debugPrint(
+            LocalizationService.instance.current.deleteStickyNoteElementDebug(
+              _selectedStickyNote!.id,
+              elementId,
+            ),
+          );
 
           // 如果删除的是图片元素，强制触发缓存清理
           if (elementToDelete.type == DrawingElementType.imageArea) {
@@ -1469,11 +1726,18 @@ debugPrint(LocalizationService.instance.current.deleteStickyNoteElementDebug(_se
           }
 
           // 显示删除成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.noteElementDeleted_7281);
+          _showSuccessSnackBar(
+            LocalizationService.instance.current.noteElementDeleted_7281,
+          );
           return;
         } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemDeleteNoteFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.deleteNoteElementFailed(e));
+          debugPrint(
+            LocalizationService.instance.current
+                .responsiveSystemDeleteNoteFailed(e),
+          );
+          _showErrorSnackBar(
+            LocalizationService.instance.current.deleteNoteElementFailed(e),
+          );
           return;
         }
       }
@@ -1492,7 +1756,12 @@ _showErrorSnackBar(LocalizationService.instance.current.deleteNoteElementFailed(
     // 尝试使用响应式系统删除元素
     try {
       deleteDrawingElementReactive(_selectedLayer!.id, elementId);
-debugPrint(LocalizationService.instance.current.debugRemoveElement(_selectedLayer!.id, elementId));
+      debugPrint(
+        LocalizationService.instance.current.debugRemoveElement(
+          _selectedLayer!.id,
+          elementId,
+        ),
+      );
 
       // 响应式系统会自动处理撤销历史和数据同步
       // 无需手动调用 _saveToUndoHistory() 和 _updateLayer()
@@ -1507,10 +1776,18 @@ debugPrint(LocalizationService.instance.current.debugRemoveElement(_selectedLaye
       }
 
       // 显示删除成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.drawingElementDeleted_7281);
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.drawingElementDeleted_7281,
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemDeleteFailed_4821(e));
-_showErrorSnackBar(LocalizationService.instance.current.deleteElementFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemDeleteFailed_4821(
+          e,
+        ),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.deleteElementFailed(e),
+      );
     }
   }
 
@@ -1536,12 +1813,17 @@ _showErrorSnackBar(LocalizationService.instance.current.deleteElementFailed(e));
           );
 
           updateStickyNoteReactive(updatedStickyNote);
-debugPrint(
-            LocalizationService.instance.current.updateStickyNoteElement(_selectedStickyNote!.id, element.id),
+          debugPrint(
+            LocalizationService.instance.current.updateStickyNoteElement(
+              _selectedStickyNote!.id,
+              element.id,
+            ),
           );
 
           // 显示更新成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.noteTagUpdated_4821);
+          _showSuccessSnackBar(
+            LocalizationService.instance.current.noteTagUpdated_4821,
+          );
           return;
         }
       }
@@ -1549,14 +1831,28 @@ _showSuccessSnackBar(LocalizationService.instance.current.noteTagUpdated_4821);
       // 如果没有选中便签或元素不属于便签，则处理图层中的元素
       if (_selectedLayer != null) {
         updateDrawingElementReactive(_selectedLayer!.id, element);
-debugPrint(LocalizationService.instance.current.updateLayerElementWithReactiveSystem(_selectedLayer!.id, element.id));
+        debugPrint(
+          LocalizationService.instance.current
+              .updateLayerElementWithReactiveSystem(
+                _selectedLayer!.id,
+                element.id,
+              ),
+        );
 
         // 显示更新成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.layerElementLabelUpdated_4821);
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.layerElementLabelUpdated_4821,
+        );
       }
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemUpdateFailed_5421(e));
-_showErrorSnackBar(LocalizationService.instance.current.updateElementFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemUpdateFailed_5421(
+          e,
+        ),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.updateElementFailed(e),
+      );
     }
   }
 
@@ -1594,7 +1890,7 @@ _showErrorSnackBar(LocalizationService.instance.current.updateElementFailed(e));
   void _addDefaultLayer() {
     if (_currentMap == null) return;
 
-final defaultLayer = MapLayer(
+    final defaultLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: LocalizationService.instance.current.layer1_7281,
       order: 0,
@@ -1605,7 +1901,11 @@ final defaultLayer = MapLayer(
     // 使用响应式系统添加默认图层
     try {
       addLayerReactive(defaultLayer);
-debugPrint(LocalizationService.instance.current.addDefaultLayerWithReactiveSystem(defaultLayer.name));
+      debugPrint(
+        LocalizationService.instance.current.addDefaultLayerWithReactiveSystem(
+          defaultLayer.name,
+        ),
+      );
 
       // 更新UI状态
       setState(() {
@@ -1614,9 +1914,15 @@ debugPrint(LocalizationService.instance.current.addDefaultLayerWithReactiveSyste
         _updateDisplayOrderAfterLayerChange();
       });
 
-debugPrint(LocalizationService.instance.current.defaultLayerAdded_7421(defaultLayer.name));
+      debugPrint(
+        LocalizationService.instance.current.defaultLayerAdded_7421(
+          defaultLayer.name,
+        ),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemAddLayerFailed(e));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemAddLayerFailed(e),
+      );
       // // 如果响应式系统失败，回退到传统方式
       // setState(() {
       //   _currentMap = _currentMap!.copyWith(
@@ -1631,9 +1937,11 @@ debugPrint(LocalizationService.instance.current.responsiveSystemAddLayerFailed(e
   void _addNewLayer() {
     if (_currentMap == null) return;
 
-final newLayer = MapLayer(
+    final newLayer = MapLayer(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: LocalizationService.instance.current.layerName_7421(_currentMap!.layers.length + 1),
+      name: LocalizationService.instance.current.layerName_7421(
+        _currentMap!.layers.length + 1,
+      ),
       order: _currentMap!.layers.length,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -1642,7 +1950,11 @@ final newLayer = MapLayer(
     // 使用响应式系统添加图层
     try {
       addLayerReactive(newLayer);
-debugPrint(LocalizationService.instance.current.addLayerWithReactiveSystem(newLayer.name));
+      debugPrint(
+        LocalizationService.instance.current.addLayerWithReactiveSystem(
+          newLayer.name,
+        ),
+      );
 
       // 更新UI状态
       setState(() {
@@ -1652,10 +1964,16 @@ debugPrint(LocalizationService.instance.current.addLayerWithReactiveSystem(newLa
       });
 
       // 显示成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.layerAdded(newLayer.name));
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.layerAdded(newLayer.name),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemAddLayerFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.addLayerFailed_4821(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemAddLayerFailed(e),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.addLayerFailed_4821(e.toString()),
+      );
     }
   }
 
@@ -1665,7 +1983,11 @@ _showErrorSnackBar(LocalizationService.instance.current.addLayerFailed_4821(e.to
     // 使用响应式系统删除图层
     try {
       deleteLayerReactive(layer.id);
-debugPrint(LocalizationService.instance.current.deleteLayerWithReactiveSystem(layer.name));
+      debugPrint(
+        LocalizationService.instance.current.deleteLayerWithReactiveSystem(
+          layer.name,
+        ),
+      );
 
       // 更新UI状态
       setState(() {
@@ -1702,10 +2024,20 @@ debugPrint(LocalizationService.instance.current.deleteLayerWithReactiveSystem(la
       });
 
       // 显示成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.layerDeleted(layer.name));
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.layerDeleted(layer.name),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemDeleteLayerFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.layerDeletionFailed_7421(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemDeleteLayerFailed(
+          e,
+        ),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.layerDeletionFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -1829,7 +2161,9 @@ _showErrorSnackBar(LocalizationService.instance.current.layerDeletionFailed_7421
 
   // 修改：新的优先显示逻辑，支持图层和图层组的组合显示
   void _prioritizeLayerAndGroupDisplay() {
-debugPrint(LocalizationService.instance.current.priorityLayerGroupCombination_7281);
+    debugPrint(
+      LocalizationService.instance.current.priorityLayerGroupCombination_7281,
+    );
 
     if (_currentMap == null) return;
 
@@ -1875,15 +2209,21 @@ debugPrint(LocalizationService.instance.current.priorityLayerGroupCombination_72
       // （后绘制的显示在上层）
       _displayOrderLayers = [...otherLayers, ...groupLayers, ...priorityLayers];
 
-debugPrint(LocalizationService.instance.current.rearrangedOrder_4281);
-debugPrint(
-        LocalizationService.instance.current.otherLayersDebug_7421(otherLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(LocalizationService.instance.current.rearrangedOrder_4281);
+      debugPrint(
+        LocalizationService.instance.current.otherLayersDebug_7421(
+          otherLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
-debugPrint(
-        LocalizationService.instance.current.groupLayersDebug_7421(groupLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.groupLayersDebug_7421(
+          groupLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
-debugPrint(
-        LocalizationService.instance.current.priorityLayersDebug_7421(priorityLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.priorityLayersDebug_7421(
+          priorityLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
     });
   }
@@ -1903,13 +2243,23 @@ debugPrint(
   }
 
   void _prioritizeLayerGroup(List<MapLayer> group) {
-debugPrint(LocalizationService.instance.current.prioritizeLayerGroupStart_7281);
-debugPrint(LocalizationService.instance.current.priorityLayerGroupDisplay(group.map((l) => l.name).toList()));
-debugPrint(
-      LocalizationService.instance.current.currentLayerOrderDebug(_currentMap?.layers.map((l) => '${l.name}(${l.order})').toList() ?? []),
+    debugPrint(
+      LocalizationService.instance.current.prioritizeLayerGroupStart_7281,
     );
-debugPrint(
-      LocalizationService.instance.current.displayOrderLayersDebug(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
+    debugPrint(
+      LocalizationService.instance.current.priorityLayerGroupDisplay(
+        group.map((l) => l.name).toList(),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.currentLayerOrderDebug(
+        _currentMap?.layers.map((l) => '${l.name}(${l.order})').toList() ?? [],
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.displayOrderLayersDebug(
+        _displayOrderLayers.map((l) => '${l.name}(${l.order})').toList(),
+      ),
     );
 
     if (_currentMap == null) return;
@@ -1921,8 +2271,10 @@ debugPrint(
       final groupLayers = <MapLayer>[];
       final groupLayerIds = group.map((l) => l.id).toSet();
 
-debugPrint(
-        LocalizationService.instance.current.allLayersDebugMessage_7421(allLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.allLayersDebugMessage_7421(
+          allLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
 
       // 分离组内图层和其他图层，保持在当前地图数据中的实际顺序
@@ -1936,20 +2288,28 @@ debugPrint(
 
       // 不再按order排序，保持图层在_currentMap!.layers中的实际顺序
       // 这样可以正确反映组内重排序的结果
-debugPrint(
-        LocalizationService.instance.current.separatedGroupLayersOrder_7284(groupLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.separatedGroupLayersOrder_7284(
+          groupLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
-debugPrint(
-        LocalizationService.instance.current.nonGroupLayersOrderDebug(nonGroupLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.nonGroupLayersOrderDebug(
+          nonGroupLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
 
       // 重新组织显示顺序：非组图层在前，组图层在后（后绘制的显示在上层）
       _displayOrderLayers = [...nonGroupLayers, ...groupLayers];
 
-debugPrint(
-        LocalizationService.instance.current.finalDisplayOrderLayersDebug(_displayOrderLayers.map((l) => '${l.name}(${l.order})').toList()),
+      debugPrint(
+        LocalizationService.instance.current.finalDisplayOrderLayersDebug(
+          _displayOrderLayers.map((l) => '${l.name}(${l.order})').toList(),
+        ),
       );
-debugPrint(LocalizationService.instance.current.prioritizeLayerGroupEnd_7281);
+      debugPrint(
+        LocalizationService.instance.current.prioritizeLayerGroupEnd_7281,
+      );
     });
   }
 
@@ -1971,7 +2331,7 @@ debugPrint(LocalizationService.instance.current.prioritizeLayerGroupEnd_7281);
       _selectedDrawingTool = null; // 清除选中的绘制工具
       _selectedElementId = null; // 清除选中的元素
     });
-debugPrint(LocalizationService.instance.current.drawingToolDisabled_4287);
+    debugPrint(LocalizationService.instance.current.drawingToolDisabled_4287);
   }
 
   /// 检查绘制工具是否应该被禁用
@@ -2038,7 +2398,11 @@ debugPrint(LocalizationService.instance.current.drawingToolDisabled_4287);
     try {
       updateLayerReactive(updatedLayer);
     } catch (e) {
-_showErrorSnackBar(LocalizationService.instance.current.layerUpdateFailed_7421(e.toString()));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.layerUpdateFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -2083,10 +2447,16 @@ _showErrorSnackBar(LocalizationService.instance.current.layerUpdateFailed_7421(e
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-_showSuccessSnackBar(LocalizationService.instance.current.layerOrderUpdated_4821);
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.layerOrderUpdated_4821,
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemReorderFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.reorderLayerFailed(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemReorderFailed(e),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.reorderLayerFailed(e.toString()),
+      );
     }
   }
 
@@ -2115,10 +2485,19 @@ _showErrorSnackBar(LocalizationService.instance.current.reorderLayerFailed(e.toS
         _updateLayerSelectionAfterReorder(oldIndex, newIndex);
       });
 
-_showSuccessSnackBar(LocalizationService.instance.current.layerGroupOrderUpdated_4821);
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.layerGroupOrderUpdated_4821,
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemGroupReorderFailed_4821(e));
-_showErrorSnackBar(LocalizationService.instance.current.layerReorderFailed_7285(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current
+            .responsiveSystemGroupReorderFailed_4821(e),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.layerReorderFailed_7285(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -2273,7 +2652,11 @@ _showErrorSnackBar(LocalizationService.instance.current.layerReorderFailed_7285(
       // 显示成功消息
       // _showSuccessSnackBar('已批量更新 ${updatedLayers.length} 个图层');
     } catch (e) {
-_showErrorSnackBar(LocalizationService.instance.current.batchUpdateLayerFailed(e.toString()));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.batchUpdateLayerFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -2373,9 +2756,11 @@ _showErrorSnackBar(LocalizationService.instance.current.batchUpdateLayerFailed(e
   void _addLegendGroup() {
     if (_currentMap == null) return;
 
-final newGroup = LegendGroup(
+    final newGroup = LegendGroup(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: LocalizationService.instance.current.legendGroupName(_currentMap!.legendGroups.length + 1),
+      name: LocalizationService.instance.current.legendGroupName(
+        _currentMap!.legendGroups.length + 1,
+      ),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -2388,9 +2773,15 @@ final newGroup = LegendGroup(
       setLegendGroupSmartHideState(newGroup.id, true);
 
       // 显示成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.legendGroupAdded_7421(newGroup.name));
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.legendGroupAdded_7421(
+          newGroup.name,
+        ),
+      );
     } catch (e) {
-_showErrorSnackBar(LocalizationService.instance.current.addLegendGroupFailed(e.toString()));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.addLegendGroupFailed(e.toString()),
+      );
     }
   }
 
@@ -2432,13 +2823,24 @@ _showErrorSnackBar(LocalizationService.instance.current.addLegendGroupFailed(e.t
     // 使用响应式系统删除图例组
     try {
       deleteLegendGroupReactive(group.id);
-debugPrint(LocalizationService.instance.current.debugRemoveLegendGroup(group.name));
+      debugPrint(
+        LocalizationService.instance.current.debugRemoveLegendGroup(group.name),
+      );
 
       // 显示成功消息
-_showSuccessSnackBar(LocalizationService.instance.current.legendGroupDeleted(group.name));
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.legendGroupDeleted(group.name),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemDeleteLegendGroupFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.deleteLegendGroupFailed_7421(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current
+            .responsiveSystemDeleteLegendGroupFailed(e),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.deleteLegendGroupFailed_7421(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -2446,12 +2848,22 @@ _showErrorSnackBar(LocalizationService.instance.current.deleteLegendGroupFailed_
   void _updateLegendGroup(LegendGroup updatedGroup) {
     if (_currentMap == null) return;
 
-debugPrint(LocalizationService.instance.current.mapEditorUpdateLegendGroup(updatedGroup.name));
-debugPrint(LocalizationService.instance.current.updatedLegendItemsCount(updatedGroup.legendItems.length));
+    debugPrint(
+      LocalizationService.instance.current.mapEditorUpdateLegendGroup(
+        updatedGroup.name,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.updatedLegendItemsCount(
+        updatedGroup.legendItems.length,
+      ),
+    );
 
     // 如果当前正在管理这个图例组，同时更新管理抽屉的状态
     if (_currentLegendGroupForManagement?.id == updatedGroup.id) {
-debugPrint(LocalizationService.instance.current.syncLegendGroupDrawerStatus_4821);
+      debugPrint(
+        LocalizationService.instance.current.syncLegendGroupDrawerStatus_4821,
+      );
       setState(() {
         _currentLegendGroupForManagement = updatedGroup;
       });
@@ -2460,13 +2872,24 @@ debugPrint(LocalizationService.instance.current.syncLegendGroupDrawerStatus_4821
     // 使用响应式系统更新图例组
     try {
       updateLegendGroupReactive(updatedGroup);
-debugPrint(LocalizationService.instance.current.updateLegendGroupWithReactiveSystem(updatedGroup.name));
+      debugPrint(
+        LocalizationService.instance.current
+            .updateLegendGroupWithReactiveSystem(updatedGroup.name),
+      );
 
       // // 显示成功消息
       // _showSuccessSnackBar('已更新图例组 "${updatedGroup.name}"');
     } catch (e) {
-debugPrint(LocalizationService.instance.current.responsiveSystemUpdateFailed_7285(e));
-_showErrorSnackBar(LocalizationService.instance.current.updateLegendGroupFailed(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.responsiveSystemUpdateFailed_7285(
+          e,
+        ),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.updateLegendGroupFailed(
+          e.toString(),
+        ),
+      );
     }
   } // 处理透明度预览
 
@@ -2725,14 +3148,30 @@ _showErrorSnackBar(LocalizationService.instance.current.updateLegendGroupFailed(
     final adapter = versionAdapter!;
     final versionManager = adapter.versionManager;
 
-debugPrint(LocalizationService.instance.current.startSavingResponsiveVersionData(baseMap.title));
-debugPrint(LocalizationService.instance.current.versionCount_7281(allVersionStates.length));
+    debugPrint(
+      LocalizationService.instance.current.startSavingResponsiveVersionData(
+        baseMap.title,
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.versionCount_7281(
+        allVersionStates.length,
+      ),
+    );
 
     for (final versionState in allVersionStates) {
       final versionId = versionState.versionId;
-debugPrint(LocalizationService.instance.current.saveVersion_7281(versionId, versionState.versionName));
-debugPrint(
-        LocalizationService.instance.current.versionStatusDebug(versionState.sessionData != null, versionState.hasUnsavedChanges),
+      debugPrint(
+        LocalizationService.instance.current.saveVersion_7281(
+          versionId,
+          versionState.versionName,
+        ),
+      );
+      debugPrint(
+        LocalizationService.instance.current.versionStatusDebug(
+          versionState.sessionData != null,
+          versionState.hasUnsavedChanges,
+        ),
       );
 
       // 获取版本的完整数据
@@ -2742,10 +3181,19 @@ debugPrint(
         versionMapData = versionState.sessionData!.copyWith(
           updatedAt: DateTime.now(),
         );
-debugPrint(LocalizationService.instance.current.versionSessionUsage_7281(versionId, versionMapData.layers.length));
+        debugPrint(
+          LocalizationService.instance.current.versionSessionUsage_7281(
+            versionId,
+            versionMapData.layers.length,
+          ),
+        );
       } else {
         // 如果没有会话数据，尝试从VFS加载该版本的数据
-debugPrint(LocalizationService.instance.current.versionNoSessionData_7281(versionId));
+        debugPrint(
+          LocalizationService.instance.current.versionNoSessionData_7281(
+            versionId,
+          ),
+        );
         try {
           final versionExists = await _vfsMapService.mapVersionExists(
             baseMap.title,
@@ -2775,16 +3223,28 @@ debugPrint(LocalizationService.instance.current.versionNoSessionData_7281(versio
               stickyNotes: stickyNotes,
               updatedAt: DateTime.now(),
             );
-debugPrint(
-              LocalizationService.instance.current.loadingVersionData_7281(versionId, mapLayers.length, stickyNotes.length),
+            debugPrint(
+              LocalizationService.instance.current.loadingVersionData_7281(
+                versionId,
+                mapLayers.length,
+                stickyNotes.length,
+              ),
             );
           } else {
             // 版本不存在，使用基础地图数据（这可能是第一次保存）
             versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
-debugPrint(LocalizationService.instance.current.versionNotFoundUsingDefault_7281(versionId));
+            debugPrint(
+              LocalizationService.instance.current
+                  .versionNotFoundUsingDefault_7281(versionId),
+            );
           }
         } catch (e) {
-debugPrint(LocalizationService.instance.current.loadVersionDataFailed_7421(versionId, e));
+          debugPrint(
+            LocalizationService.instance.current.loadVersionDataFailed_7421(
+              versionId,
+              e,
+            ),
+          );
           versionMapData = baseMap.copyWith(updatedAt: DateTime.now());
         }
       }
@@ -2812,7 +3272,9 @@ debugPrint(LocalizationService.instance.current.loadVersionDataFailed_7421(versi
     // 5. 标记所有版本为已保存状态
     versionManager.markAllVersionsSaved();
 
-debugPrint(LocalizationService.instance.current.allReactiveVersionsSavedToVfs_7281);
+    debugPrint(
+      LocalizationService.instance.current.allReactiveVersionsSavedToVfs_7281,
+    );
   }
 
   /// 保存单个版本的数据到VFS存储
@@ -2822,12 +3284,19 @@ debugPrint(LocalizationService.instance.current.allReactiveVersionsSavedToVfs_72
     required bool isDefault,
   }) async {
     try {
-debugPrint(LocalizationService.instance.current.saveVersionToVfs(versionData.title, versionId));
+      debugPrint(
+        LocalizationService.instance.current.saveVersionToVfs(
+          versionData.title,
+          versionId,
+        ),
+      );
 
       if (isDefault) {
         // 默认版本：使用完整的saveMap方法（包含清理逻辑）
         await _vfsMapService.saveMap(versionData, widget.folderPath);
-debugPrint(LocalizationService.instance.current.defaultVersionSaved_7281);
+        debugPrint(
+          LocalizationService.instance.current.defaultVersionSaved_7281,
+        );
       } else {
         // 其他版本：确保版本目录存在
         final versionExists = await _vfsMapService.mapVersionExists(
@@ -2873,10 +3342,17 @@ debugPrint(LocalizationService.instance.current.defaultVersionSaved_7281);
           );
         }
 
-debugPrint(LocalizationService.instance.current.versionDataSaved_7281(versionId));
+        debugPrint(
+          LocalizationService.instance.current.versionDataSaved_7281(versionId),
+        );
       }
     } catch (e) {
-debugPrint(LocalizationService.instance.current.versionSaveFailed_7281(versionId, e));
+      debugPrint(
+        LocalizationService.instance.current.versionSaveFailed_7281(
+          versionId,
+          e,
+        ),
+      );
       rethrow;
     }
   }
@@ -2901,8 +3377,11 @@ debugPrint(LocalizationService.instance.current.versionSaveFailed_7281(versionId
       // 生成唯一的版本ID
       final versionId = 'version_${DateTime.now().millisecondsSinceEpoch}';
 
-debugPrint(
-        LocalizationService.instance.current.versionCreationStatus(currentVersionId ?? 'null', _currentMap!.layers.length),
+      debugPrint(
+        LocalizationService.instance.current.versionCreationStatus(
+          currentVersionId ?? 'null',
+          _currentMap!.layers.length,
+        ),
       );
 
       // 使用响应式版本管理创建新版本（从当前版本复制数据）
@@ -2913,8 +3392,15 @@ debugPrint(
       );
 
       if (newVersionState != null) {
-debugPrint(
-          LocalizationService.instance.current.versionCreatedMessage_7421(versionId, newVersionState.sessionData != null ? LocalizationService.instance.current.hasLayersMessage_5832(newVersionState.sessionData!.layers.length) : LocalizationService.instance.current.noData_6943),
+        debugPrint(
+          LocalizationService.instance.current.versionCreatedMessage_7421(
+            versionId,
+            newVersionState.sessionData != null
+                ? LocalizationService.instance.current.hasLayersMessage_5832(
+                    newVersionState.sessionData!.layers.length,
+                  )
+                : LocalizationService.instance.current.noData_6943,
+          ),
         );
 
         setState(() {
@@ -2941,18 +3427,39 @@ debugPrint(
             updatedAt: newVersionState.lastModified,
             folderPath: widget.folderPath,
           );
-debugPrint(LocalizationService.instance.current.versionSavedToMetadata(name, versionId));
+          debugPrint(
+            LocalizationService.instance.current.versionSavedToMetadata(
+              name,
+              versionId,
+            ),
+          );
         } catch (e) {
-debugPrint(LocalizationService.instance.current.versionMetadataSaveFailed_7421(e));
+          debugPrint(
+            LocalizationService.instance.current.versionMetadataSaveFailed_7421(
+              e,
+            ),
+          );
           // 不影响主流程，只是记录错误
         }
 
-debugPrint(LocalizationService.instance.current.newVersionCreated_7281(versionId));
-_showSuccessSnackBar(LocalizationService.instance.current.versionCreated_7421(name));
+        debugPrint(
+          LocalizationService.instance.current.newVersionCreated_7281(
+            versionId,
+          ),
+        );
+        _showSuccessSnackBar(
+          LocalizationService.instance.current.versionCreated_7421(name),
+        );
       }
     } catch (e) {
-debugPrint(LocalizationService.instance.current.versionCreationFailed_7285(e));
-_showErrorSnackBar(LocalizationService.instance.current.versionCreationFailed(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.versionCreationFailed_7285(e),
+      );
+      _showErrorSnackBar(
+        LocalizationService.instance.current.versionCreationFailed(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -3053,18 +3560,26 @@ _showErrorSnackBar(LocalizationService.instance.current.versionCreationFailed(e.
         });
 
         // _showSuccessSnackBar('已切换到版本');
-debugPrint(LocalizationService.instance.current.switchedToVersion_7281(versionId));
+        debugPrint(
+          LocalizationService.instance.current.switchedToVersion_7281(
+            versionId,
+          ),
+        );
       });
     } catch (e) {
-debugPrint(LocalizationService.instance.current.versionSwitchFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.versionSwitchFailed(e.toString()));
+      debugPrint(LocalizationService.instance.current.versionSwitchFailed(e));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.versionSwitchFailed(e.toString()),
+      );
     }
   }
 
   /// 删除版本（使用响应式系统）
   Future<void> _deleteVersion(String versionId) async {
     if (_currentMap == null || versionId == 'default') {
-_showErrorSnackBar(LocalizationService.instance.current.cannotDeleteDefaultVersion_4821);
+      _showErrorSnackBar(
+        LocalizationService.instance.current.cannotDeleteDefaultVersion_4821,
+      );
       return;
     }
 
@@ -3076,7 +3591,9 @@ _showErrorSnackBar(LocalizationService.instance.current.cannotDeleteDefaultVersi
       await deleteVersion(versionId);
 
       // 删除VFS存储中的版本数据和元数据
-debugPrint(LocalizationService.instance.current.startDeletingVersionData_7281);
+      debugPrint(
+        LocalizationService.instance.current.startDeletingVersionData_7281,
+      );
 
       // 1. 删除VFS中的版本数据
       try {
@@ -3085,9 +3602,15 @@ debugPrint(LocalizationService.instance.current.startDeletingVersionData_7281);
           versionId,
           widget.folderPath,
         );
-debugPrint(LocalizationService.instance.current.vfsVersionDeletedSuccessfully(versionId));
+        debugPrint(
+          LocalizationService.instance.current.vfsVersionDeletedSuccessfully(
+            versionId,
+          ),
+        );
       } catch (e) {
-debugPrint(LocalizationService.instance.current.deleteVfsVersionDataFailed(e));
+        debugPrint(
+          LocalizationService.instance.current.deleteVfsVersionDataFailed(e),
+        );
         // 如果删除VFS数据失败，仍然继续删除元数据
       }
 
@@ -3098,9 +3621,18 @@ debugPrint(LocalizationService.instance.current.deleteVfsVersionDataFailed(e));
           versionId,
           widget.folderPath,
         );
-debugPrint(LocalizationService.instance.current.versionMetadataDeletedSuccessfully(versionId));
+        debugPrint(
+          LocalizationService.instance.current
+              .versionMetadataDeletedSuccessfully(versionId),
+        );
       } catch (e) {
-debugPrint(LocalizationService.instance.current.deleteVersionMetadataFailed(e, widget.mapTitle ?? 'unknown', versionId));
+        debugPrint(
+          LocalizationService.instance.current.deleteVersionMetadataFailed(
+            e,
+            widget.mapTitle ?? 'unknown',
+            versionId,
+          ),
+        );
         // 元数据删除失败不影响主流程
       }
 
@@ -3118,11 +3650,17 @@ debugPrint(LocalizationService.instance.current.deleteVersionMetadataFailed(e, w
         // 响应式系统会自动管理状态
       });
 
-_showSuccessSnackBar(LocalizationService.instance.current.versionDeletedSuccessfully_7281);
-debugPrint(LocalizationService.instance.current.versionDeletedComplete(versionId));
+      _showSuccessSnackBar(
+        LocalizationService.instance.current.versionDeletedSuccessfully_7281,
+      );
+      debugPrint(
+        LocalizationService.instance.current.versionDeletedComplete(versionId),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.deleteVersionFailed(e));
-_showErrorSnackBar(LocalizationService.instance.current.deleteVersionFailed(e.toString()));
+      debugPrint(LocalizationService.instance.current.deleteVersionFailed(e));
+      _showErrorSnackBar(
+        LocalizationService.instance.current.deleteVersionFailed(e.toString()),
+      );
     }
   }
 
@@ -3150,8 +3688,11 @@ _showErrorSnackBar(LocalizationService.instance.current.deleteVersionFailed(e.to
 
     // 使用ReactiveVersionTabBar的静态属性检查是否有未保存的版本
     final hasUnsavedVersions = ReactiveVersionTabBar.hasAnyUnsavedVersions;
-debugPrint(
-      LocalizationService.instance.current.exitConfirmationCheck(_hasUnsavedChanges, hasUnsavedVersions),
+    debugPrint(
+      LocalizationService.instance.current.exitConfirmationCheck(
+        _hasUnsavedChanges,
+        hasUnsavedVersions,
+      ),
     );
 
     // 如果没有未保存更改且没有未保存的版本，或者在预览模式，直接允许退出
@@ -3164,12 +3705,14 @@ debugPrint(
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-title: Text(LocalizationService.instance.current.unsavedChanges_4271),
-content: Text(LocalizationService.instance.current.unsavedChangesWarning_7284),
+        title: Text(LocalizationService.instance.current.unsavedChanges_4271),
+        content: Text(
+          LocalizationService.instance.current.unsavedChangesWarning_7284,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-child: Text(LocalizationService.instance.current.cancel_4821),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           TextButton(
             onPressed: () async {
@@ -3178,7 +3721,9 @@ child: Text(LocalizationService.instance.current.cancel_4821),
                 await _savePanelStatesOnExit(); // 保存面板状态
               }
             },
-child: Text(LocalizationService.instance.current.exitWithoutSaving_7281),
+            child: Text(
+              LocalizationService.instance.current.exitWithoutSaving_7281,
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -3191,7 +3736,7 @@ child: Text(LocalizationService.instance.current.exitWithoutSaving_7281),
                 }
               }
             },
-child: Text(LocalizationService.instance.current.saveAndExit_4271),
+            child: Text(LocalizationService.instance.current.saveAndExit_4271),
           ),
         ],
       ),
@@ -3232,10 +3777,14 @@ child: Text(LocalizationService.instance.current.saveAndExit_4271),
         );
 
         _panelStatesChanged = false;
-debugPrint(LocalizationService.instance.current.panelStateSavedOnExit_4821);
+        debugPrint(
+          LocalizationService.instance.current.panelStateSavedOnExit_4821,
+        );
       }
     } catch (e) {
-debugPrint(LocalizationService.instance.current.savePanelStateFailed_7285(e));
+      debugPrint(
+        LocalizationService.instance.current.savePanelStateFailed_7285(e),
+      );
     }
   } // 处理工具栏自动关闭逻辑
 
@@ -3354,15 +3903,22 @@ debugPrint(LocalizationService.instance.current.savePanelStateFailed_7285(e));
     final hasSelectedGroup =
         _selectedLayerGroup != null && _selectedLayerGroup!.isNotEmpty;
 
-if (hasSelectedLayer && hasSelectedGroup) {
-      return LocalizationService.instance.current.selectedLayerAndGroup_7281(_selectedLayer!.name, _selectedLayerGroup!.map((layer) => layer.name).join(', '));
-} else if (hasSelectedLayer) {
+    if (hasSelectedLayer && hasSelectedGroup) {
+      return LocalizationService.instance.current.selectedLayerAndGroup_7281(
+        _selectedLayer!.name,
+        _selectedLayerGroup!.map((layer) => layer.name).join(', '),
+      );
+    } else if (hasSelectedLayer) {
       // 只选中图层
-      return LocalizationService.instance.current.currentSelectedLayer_7421(_selectedLayer!.name);
-} else if (hasSelectedGroup) {
+      return LocalizationService.instance.current.currentSelectedLayer_7421(
+        _selectedLayer!.name,
+      );
+    } else if (hasSelectedGroup) {
       // 只选中图层组
-      return LocalizationService.instance.current.selectedLayerGroupMessage(_selectedLayerGroup!.map((layer) => layer.name).join(', '));
-} else {
+      return LocalizationService.instance.current.selectedLayerGroupMessage(
+        _selectedLayerGroup!.map((layer) => layer.name).join(', '),
+      );
+    } else {
       // 没有选择
       return LocalizationService.instance.current.noLayerSelected_4821;
     }
@@ -3441,7 +3997,7 @@ if (hasSelectedLayer && hasSelectedGroup) {
       const SizedBox(width: 4),
 
       // 地图信息按钮
-IconButton(
+      IconButton(
         icon: const Icon(Icons.info_outline),
         onPressed: _showMapInfo,
         tooltip: LocalizationService.instance.current.mapInfo_7421,
@@ -3449,7 +4005,7 @@ IconButton(
 
       // 十字线按钮
       const SizedBox(width: 4),
-IconButton(
+      IconButton(
         icon: Icon(
           Icons.square_foot,
           color: _isCrosshairEnabled
@@ -3461,12 +4017,14 @@ IconButton(
             _isCrosshairEnabled = !_isCrosshairEnabled;
           });
         },
-        tooltip: _isCrosshairEnabled ? LocalizationService.instance.current.disableCrosshair_42 : LocalizationService.instance.current.enableCrosshair_42,
+        tooltip: _isCrosshairEnabled
+            ? LocalizationService.instance.current.disableCrosshair_42
+            : LocalizationService.instance.current.enableCrosshair_42,
       ),
 
       // 导出按钮
       const SizedBox(width: 4),
-IconButton(
+      IconButton(
         icon: const Icon(Icons.arrow_outward),
         onPressed: _showExportDialog,
         tooltip: LocalizationService.instance.current.exportLayer_7421,
@@ -3475,7 +4033,7 @@ IconButton(
       // 保存按钮（仅在编辑模式下显示）
       if (!widget.isPreviewMode) ...[
         const SizedBox(width: 4),
-IconButton(
+        IconButton(
           icon: _isLoading
               ? const SizedBox(
                   width: 20,
@@ -3487,7 +4045,9 @@ IconButton(
                 )
               : const Icon(Icons.save),
           onPressed: _isLoading ? null : saveMap,
-          tooltip: _isLoading ? LocalizationService.instance.current.savingInProgress_42 : LocalizationService.instance.current.save_73,
+          tooltip: _isLoading
+              ? LocalizationService.instance.current.savingInProgress_42
+              : LocalizationService.instance.current.save_73,
         ),
       ],
 
@@ -3516,7 +4076,7 @@ IconButton(
             children: [
               Icon(Icons.map, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 8),
-Text(LocalizationService.instance.current.mapInfo_7281)
+              Text(LocalizationService.instance.current.mapInfo_7281),
             ],
           ),
           content: SizedBox(
@@ -3526,25 +4086,49 @@ Text(LocalizationService.instance.current.mapInfo_7281)
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-_buildInfoRow(LocalizationService.instance.current.mapName_4821, widget.mapTitle ?? LocalizationService.instance.current.unknownMap_4821),
-_buildInfoRow(LocalizationService.instance.current.editMode_4821, widget.isPreviewMode ? LocalizationService.instance.current.previewMode_4822 : LocalizationService.instance.current.editMode_4821),
+                  _buildInfoRow(
+                    LocalizationService.instance.current.mapName_4821,
+                    widget.mapTitle ??
+                        LocalizationService.instance.current.unknownMap_4821,
+                  ),
+                  _buildInfoRow(
+                    LocalizationService.instance.current.editMode_4821,
+                    widget.isPreviewMode
+                        ? LocalizationService.instance.current.previewMode_4822
+                        : LocalizationService.instance.current.editMode_4821,
+                  ),
                   if (widget.folderPath != null)
-_buildInfoRow(LocalizationService.instance.current.folderPathLabel_4821, widget.folderPath ?? ''),
-_buildInfoRow(LocalizationService.instance.current.currentVersion_7281, 'default'),
+                    _buildInfoRow(
+                      LocalizationService.instance.current.folderPathLabel_4821,
+                      widget.folderPath ?? '',
+                    ),
+                  _buildInfoRow(
+                    LocalizationService.instance.current.currentVersion_7281,
+                    'default',
+                  ),
                   const SizedBox(height: 16),
-Text(
+                  Text(
                     LocalizationService.instance.current.editorStatus_4521,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-_buildStatusRow(
-                    LocalizationService.instance.current.unsavedChangesPrompt_7421,
+                  _buildStatusRow(
+                    LocalizationService
+                        .instance
+                        .current
+                        .unsavedChangesPrompt_7421,
                     _hasUnsavedChanges ||
                         ReactiveVersionTabBar.hasAnyUnsavedVersions,
                   ),
-_buildStatusRow(LocalizationService.instance.current.panelStatusChanged_7281, _panelStatesChanged),
+                  _buildStatusRow(
+                    LocalizationService
+                        .instance
+                        .current
+                        .panelStatusChanged_7281,
+                    _panelStatesChanged,
+                  ),
                   const SizedBox(height: 16),
                   // 快捷键按钮
                   SizedBox(
@@ -3555,7 +4139,12 @@ _buildStatusRow(LocalizationService.instance.current.panelStatusChanged_7281, _p
                         ShortcutsDialog.show(context); // 显示快捷键对话框
                       },
                       icon: const Icon(Icons.keyboard),
-label: Text(LocalizationService.instance.current.viewShortcutList_7281),
+                      label: Text(
+                        LocalizationService
+                            .instance
+                            .current
+                            .viewShortcutList_7281,
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -3593,7 +4182,11 @@ label: Text(LocalizationService.instance.current.viewShortcutList_7281),
               orElse: () => throw Exception('Layer not found: $layerId'),
             );
             if (mounted) {
-context.showSuccessSnackBar(LocalizationService.instance.current.exportLayerSuccess(layer?.name ?? layerId));
+              context.showSuccessSnackBar(
+                LocalizationService.instance.current.exportLayerSuccess(
+                  layer?.name ?? layerId,
+                ),
+              );
             }
           },
         );
@@ -3658,8 +4251,10 @@ context.showSuccessSnackBar(LocalizationService.instance.current.exportLayerSucc
                   color: status ? Colors.green : Colors.grey,
                 ),
                 const SizedBox(width: 6),
-Text(
-                  status ? LocalizationService.instance.current.yes_4287 : LocalizationService.instance.current.no_4287,
+                Text(
+                  status
+                      ? LocalizationService.instance.current.yes_4287
+                      : LocalizationService.instance.current.no_4287,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: status ? Colors.green : Colors.grey,
                     fontWeight: FontWeight.w500,
@@ -3699,7 +4294,7 @@ Text(
                   leading: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-IconButton(
+                      IconButton(
                         icon: _isLoading
                             ? const SizedBox(
                                 width: 20,
@@ -3721,7 +4316,15 @@ IconButton(
                                   context.pop(); // 使用 go_router 的方式退出
                                 }
                               },
-                        tooltip: _isLoading ? LocalizationService.instance.current.savingInProgress_42 : LocalizationService.instance.current.backButton_75,
+                        tooltip: _isLoading
+                            ? LocalizationService
+                                  .instance
+                                  .current
+                                  .savingInProgress_42
+                            : LocalizationService
+                                  .instance
+                                  .current
+                                  .backButton_75,
                       ),
                       Icon(
                         Icons.edit_location,
@@ -3899,10 +4502,19 @@ IconButton(
                                                       .onSecondaryContainer,
                                                 ),
                                                 const SizedBox(width: 8),
-Text(
+                                                Text(
                                                   _selectedStickyNote != null
-                                                      ? LocalizationService.instance.current.stickyNoteInspectorTitle_7421(_selectedStickyNote!.title)
-                                                      : LocalizationService.instance.current.zLevelInspector_1589,
+                                                      ? LocalizationService
+                                                            .instance
+                                                            .current
+                                                            .stickyNoteInspectorTitle_7421(
+                                                              _selectedStickyNote!
+                                                                  .title,
+                                                            )
+                                                      : LocalizationService
+                                                            .instance
+                                                            .current
+                                                            .zLevelInspector_1589,
                                                   style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w500,
@@ -4027,7 +4639,7 @@ Text(
     // 绘制工具栏（仅编辑模式）
     panels.add(
       _buildCollapsiblePanel(
-        title: '绘制工具',
+        title: LocalizationService.instance.current.drawingToolsTitle_4722,
         icon: Icons.brush,
         isCollapsed: _isDrawingToolbarCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('drawing'),
@@ -4038,16 +4650,25 @@ Text(
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations, // 修改禁用状态提示逻辑
         collapsedSubtitle: _shouldDisableDrawingTools
-            ? '无可见图层，绘制工具已禁用'
+            ? LocalizationService.instance.current.noVisibleLayersDisabled_4723
             : _selectedStickyNote != null
-            ? '绘制到便签: ${_selectedStickyNote!.title}'
+            ? LocalizationService.instance.current.drawToStickyNote_4724(
+                _selectedStickyNote!.title,
+              )
             : _selectedLayer != null
-            ? '绘制到: ${_selectedLayer!.name}'
+            ? LocalizationService.instance.current.drawToLayer_4725(
+                _selectedLayer!.name,
+              )
             : _getCurrentDrawingTargetLayer() != null
-            ? '绘制到: ${_getCurrentDrawingTargetLayer()!.name} (默认最上层)'
+            ? LocalizationService.instance.current.drawToDefaultLayer_4726(
+                _getCurrentDrawingTargetLayer()!.name,
+              )
             : _selectedLayerGroup != null
-            ? '选中图层组 (${_selectedLayerGroup!.length} 个图层)'
-            : _selectedDrawingTool?.toString().split('.').last ?? '未选择工具',
+            ? LocalizationService.instance.current.selectedLayerGroup_4727(
+                _selectedLayerGroup!.length,
+              )
+            : _selectedDrawingTool?.toString().split('.').last ??
+                  LocalizationService.instance.current.noToolSelected_4728,
         child: _isDrawingToolbarCollapsed
             ? null
             : Stack(
@@ -4145,8 +4766,11 @@ Text(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
                                 ),
-child: Text(
-                                  LocalizationService.instance.current.noAvailableLayers_4721,
+                                child: Text(
+                                  LocalizationService
+                                      .instance
+                                      .current
+                                      .noAvailableLayers_4721,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -4169,7 +4793,7 @@ child: Text(
     // 图层面板
     panels.add(
       _buildCollapsiblePanel(
-        title: '图层',
+        title: LocalizationService.instance.current.layersTitle_7281,
         icon: Icons.layers,
         isCollapsed: _isLayerPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('layer'),
@@ -4182,10 +4806,12 @@ child: Text(
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-IconButton(
+          IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addNewLayer,
-            tooltip: layout.showTooltips ? LocalizationService.instance.current.addLayer_7281 : null,
+            tooltip: layout.showTooltips
+                ? LocalizationService.instance.current.addLayer_7281
+                : null,
           ),
         ],
         child: _isLayerPanelCollapsed
@@ -4223,7 +4849,7 @@ IconButton(
     );
     // 图例管理面板
     panels.add(
-_buildCollapsiblePanel(
+      _buildCollapsiblePanel(
         title: LocalizationService.instance.current.legendManagement_4821,
         icon: Icons.legend_toggle,
         isCollapsed: _isLegendPanelCollapsed,
@@ -4238,7 +4864,9 @@ _buildCollapsiblePanel(
           IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addLegendGroup,
-            tooltip: layout.showTooltips ? LocalizationService.instance.current.addLegendGroup_7352 : null,
+            tooltip: layout.showTooltips
+                ? LocalizationService.instance.current.addLegendGroup_7352
+                : null,
           ),
         ],
         child: _isLegendPanelCollapsed
@@ -4259,7 +4887,7 @@ _buildCollapsiblePanel(
     // 便签面板
     panels.add(
       _buildCollapsiblePanel(
-        title: '便签',
+        title: LocalizationService.instance.current.stickyNoteTitle_7421,
         icon: Icons.sticky_note_2,
         isCollapsed: _isStickyNotePanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('stickyNote'),
@@ -4271,10 +4899,12 @@ _buildCollapsiblePanel(
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-IconButton(
+          IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _addNewStickyNote,
-            tooltip: layout.showTooltips ? LocalizationService.instance.current.addStickyNote_7421 : null,
+            tooltip: layout.showTooltips
+                ? LocalizationService.instance.current.addStickyNote_7421
+                : null,
           ),
         ],
         child: _isStickyNotePanelCollapsed
@@ -4296,7 +4926,7 @@ IconButton(
     ); // 脚本管理面板
     panels.add(
       _buildCollapsiblePanel(
-        title: '脚本管理',
+        title: LocalizationService.instance.current.scriptManagement_4821,
         icon: Icons.code,
         isCollapsed: _isScriptPanelCollapsed,
         onToggleCollapsed: () => _handlePanelToggle('script'),
@@ -4307,10 +4937,12 @@ IconButton(
         animationDuration: layout.animationDuration,
         enableAnimations: layout.enableAnimations,
         actions: [
-IconButton(
+          IconButton(
             icon: const Icon(Icons.add, size: 18),
             onPressed: _showNewScriptDialog,
-            tooltip: layout.showTooltips ? LocalizationService.instance.current.newScript_7281 : null,
+            tooltip: layout.showTooltips
+                ? LocalizationService.instance.current.newScript_7281
+                : null,
           ),
         ],
         child: _isScriptPanelCollapsed
@@ -4379,8 +5011,11 @@ IconButton(
               ),
               // 自动关闭开关（仅在折叠状态时显示）
               if (onAutoCloseToggled != null) ...[
-Tooltip(
-                  message: LocalizationService.instance.current.autoCloseTooltip_4821,
+                Tooltip(
+                  message: LocalizationService
+                      .instance
+                      .current
+                      .autoCloseTooltip_4821,
                   child: Transform.scale(
                     scale: 0.8,
                     child: Switch(
@@ -4434,12 +5069,18 @@ Tooltip(
                     // 自动关闭开关
                     if (onAutoCloseToggled != null) ...[
                       Tooltip(
-                        message: '自动关闭：当点击其他工具栏时自动关闭此工具栏',
+                        message: LocalizationService
+                            .instance
+                            .current
+                            .autoCloseTooltip_4821,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-Text(
-                              LocalizationService.instance.current.autoClose_7421,
+                            Text(
+                              LocalizationService
+                                  .instance
+                                  .current
+                                  .autoClose_7421,
                               style: TextStyle(
                                 fontSize: isNarrowScreen ? 11 : 12,
                                 color: Theme.of(context).hintColor,
@@ -4580,7 +5221,10 @@ Text(
                   // 更新最近使用的颜色
                   final userPrefs = context.read<UserPreferencesProvider>();
                   userPrefs.addRecentColor(color.value).catchError((e) {
-debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
+                    debugPrint(
+                      LocalizationService.instance.current
+                          .updateRecentColorsFailed(e),
+                    );
                   });
                 },
                 child: Container(
@@ -4626,7 +5270,10 @@ debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
                     // 更新最近使用的颜色
                     final userPrefs = context.read<UserPreferencesProvider>();
                     userPrefs.addRecentColor(color.toARGB32()).catchError((e) {
-debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
+                      debugPrint(
+                        LocalizationService.instance.current
+                            .updateRecentColorsFailed(e),
+                      );
                     });
                   },
                   onStrokeWidthChanged: (width) {
@@ -4684,20 +5331,39 @@ debugPrint(LocalizationService.instance.current.updateRecentColorsFailed(e));
     return Consumer<UserPreferencesProvider>(
       builder: (context, userPrefsProvider, child) {
         // 添加调试信息
-debugPrint(LocalizationService.instance.current.buildingMapCanvas_7281);
-debugPrint(LocalizationService.instance.current.currentMapTitle_7421(_currentMap?.title ?? 'null'));
-debugPrint(LocalizationService.instance.current.legendGroupCount(_currentMap?.legendGroups.length ?? 0));
+        debugPrint(LocalizationService.instance.current.buildingMapCanvas_7281);
+        debugPrint(
+          LocalizationService.instance.current.currentMapTitle_7421(
+            _currentMap?.title ?? 'null',
+          ),
+        );
+        debugPrint(
+          LocalizationService.instance.current.legendGroupCount(
+            _currentMap?.legendGroups.length ?? 0,
+          ),
+        );
         if (_currentMap?.legendGroups != null) {
           for (int i = 0; i < _currentMap!.legendGroups.length; i++) {
             final group = _currentMap!.legendGroups[i];
-debugPrint(
-              LocalizationService.instance.current.legendGroupInfo(i, group.name, group.isVisible, group.legendItems.length),
+            debugPrint(
+              LocalizationService.instance.current.legendGroupInfo(
+                i,
+                group.name,
+                group.isVisible,
+                group.legendItems.length,
+              ),
             );
           }
         }
-debugPrint(LocalizationService.instance.current.versionAdapterExists_7281(versionAdapter != null));
-debugPrint(
-          LocalizationService.instance.current.legendSessionManagerExists_7281(versionAdapter?.legendSessionManager != null),
+        debugPrint(
+          LocalizationService.instance.current.versionAdapterExists_7281(
+            versionAdapter != null,
+          ),
+        );
+        debugPrint(
+          LocalizationService.instance.current.legendSessionManagerExists_7281(
+            versionAdapter?.legendSessionManager != null,
+          ),
         );
 
         // 创建用于显示的地图副本，使用重新排序的图层
@@ -4836,12 +5502,16 @@ debugPrint(
     // 如果有绑定的图例组，切换到第一个
     if (boundLegendGroups.isNotEmpty) {
       final firstBoundGroup = boundLegendGroups.first;
-debugPrint(LocalizationService.instance.current.autoSwitchLegendGroupDrawer(firstBoundGroup.name));
+      debugPrint(
+        LocalizationService.instance.current.autoSwitchLegendGroupDrawer(
+          firstBoundGroup.name,
+        ),
+      );
 
       // 切换到第一个绑定的图例组
       _showLegendGroupManagementDrawer(firstBoundGroup);
     } else {
-debugPrint(LocalizationService.instance.current.noLegendGroupBound_7281);
+      debugPrint(LocalizationService.instance.current.noLegendGroupBound_7281);
     }
   }
 
@@ -4854,9 +5524,11 @@ debugPrint(LocalizationService.instance.current.noLegendGroupBound_7281);
   void _addNewStickyNote() {
     if (_currentMap == null) return;
 
-final newNote = StickyNote(
+    final newNote = StickyNote(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: LocalizationService.instance.current.newNoteTitle(_currentMap!.stickyNotes.length + 1),
+      title: LocalizationService.instance.current.newNoteTitle(
+        _currentMap!.stickyNotes.length + 1,
+      ),
       position: const Offset(0.1, 0.1), // 相对位置 (10%, 10%)
       size: const Size(0.2, 0.15), // 相对大小 (20%宽, 15%高)
       opacity: 1.0,
@@ -5035,7 +5707,9 @@ class _ReactiveScriptCreateDialogState
             size: 20,
           ),
           const SizedBox(width: 8),
-Text(LocalizationService.instance.current.createResponsiveScript_4821),
+          Text(
+            LocalizationService.instance.current.createResponsiveScript_4821,
+          ),
         ],
       ),
       content: SizedBox(
@@ -5065,8 +5739,11 @@ Text(LocalizationService.instance.current.createResponsiveScript_4821),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-child: Text(
-                      LocalizationService.instance.current.responsiveScriptDescription_4521,
+                    child: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .responsiveScriptDescription_4521,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.primary,
@@ -5079,7 +5756,7 @@ child: Text(
             const SizedBox(height: 16),
             TextField(
               controller: _nameController,
-decoration: InputDecoration(
+              decoration: InputDecoration(
                 labelText: LocalizationService.instance.current.scriptName_4521,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.edit),
@@ -5088,8 +5765,9 @@ decoration: InputDecoration(
             const SizedBox(height: 16),
             TextField(
               controller: _descriptionController,
-decoration: InputDecoration(
-                labelText: LocalizationService.instance.current.descriptionLabel_4821,
+              decoration: InputDecoration(
+                labelText:
+                    LocalizationService.instance.current.descriptionLabel_4821,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.description),
               ),
@@ -5098,7 +5776,7 @@ decoration: InputDecoration(
             const SizedBox(height: 16),
             DropdownButtonFormField<ScriptType>(
               value: _selectedType,
-decoration: InputDecoration(
+              decoration: InputDecoration(
                 labelText: LocalizationService.instance.current.scriptType_4521,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.category),
@@ -5131,12 +5809,12 @@ decoration: InputDecoration(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-child: Text(LocalizationService.instance.current.cancelButton_7421),
+          child: Text(LocalizationService.instance.current.cancelButton_7421),
         ),
         FilledButton.icon(
           onPressed: _saveScript,
           icon: const Icon(Icons.save, size: 16),
-label: Text(LocalizationService.instance.current.createScript_4271),
+          label: Text(LocalizationService.instance.current.createScript_4271),
         ),
       ],
     );
@@ -5144,7 +5822,9 @@ label: Text(LocalizationService.instance.current.createScript_4271),
 
   void _saveScript() async {
     if (_nameController.text.trim().isEmpty) {
-context.showErrorSnackBar(LocalizationService.instance.current.enterScriptName_4821);
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.enterScriptName_4821,
+      );
       return;
     }
 
@@ -5166,7 +5846,11 @@ context.showErrorSnackBar(LocalizationService.instance.current.enterScriptName_4
     Navigator.of(context).pop();
 
     // 显示成功
-context.showSuccessSnackBar(LocalizationService.instance.current.scriptCreatedSuccessfully(script.name));
+    context.showSuccessSnackBar(
+      LocalizationService.instance.current.scriptCreatedSuccessfully(
+        script.name,
+      ),
+    );
   }
 
   IconData _getTypeIcon(ScriptType type) {
@@ -5200,7 +5884,7 @@ context.showSuccessSnackBar(LocalizationService.instance.current.scriptCreatedSu
   }
 
   String _getTypeDisplayName(ScriptType type) {
-switch (type) {
+    switch (type) {
       case ScriptType.automation:
         return LocalizationService.instance.current.automation_1234;
       case ScriptType.animation:

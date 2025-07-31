@@ -8,7 +8,7 @@ import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import '../models/map_item.dart';
 import '../models/map_layer.dart';
 import '../config/config_manager.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// Web平台数据库预填充工具

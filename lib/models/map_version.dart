@@ -1,7 +1,7 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'map_item.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 /// 地图版本信息

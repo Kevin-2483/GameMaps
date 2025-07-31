@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'map_layer.dart';
 import 'sticky_note.dart'; // 导入StickyNote
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 part 'map_item.g.dart';

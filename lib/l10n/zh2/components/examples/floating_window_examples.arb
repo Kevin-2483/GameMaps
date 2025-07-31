@@ -1,0 +1,17 @@
+{
+  "basicFloatingWindow_4821": "基础浮动窗口",
+  "basicFloatingWindowExample_4821": "基础浮动窗口示例",
+  "windowContentDescription_4821": "窗口内容描述",
+  "windowSizeDescription_5739": "窗口尺寸描述",
+  "exampleInputField_4521": "示例输入框",
+  "cancelButton_7284": "取消",
+  "confirmButton_4821": "确认",
+  "settingsManagement_4821": "设置管理",
+  "configureAppSettings_7285": "配置应用程序设置和首选项",
+  "refresh_4821": "刷新",
+  "smallDialogTitle_4821": "小型对话框",
+  "settings_7281": "设置",
+  "extensionWindowTitle_7281": "扩展方法窗口",
+  "draggableWindowTitle_4521": "可拖拽窗口",
+  "windowDragHint_4821": "拖拽标题栏可移动窗口"
+}

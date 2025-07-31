@@ -834,35 +834,35 @@ class ToolSettingsSection extends StatelessWidget {
   String _getToolDisplayName(String tool) {
     switch (tool) {
       case 'pen':
-        return '钢笔';
+        return LocalizationService.instance.current.penTool_1234;
       case 'brush':
-        return '画笔';
+        return LocalizationService.instance.current.brushTool_5678;
       case 'line':
-        return '直线';
+        return LocalizationService.instance.current.lineTool_9012;
       case 'dashedLine':
-        return '虚线';
+        return LocalizationService.instance.current.dashedLineTool_3456;
       case 'arrow':
-        return '箭头';
+        return LocalizationService.instance.current.arrowTool_7890;
       case 'rectangle':
-        return '实心矩形';
+        return LocalizationService.instance.current.solidRectangleTool_1235;
       case 'hollowRectangle':
-        return '空心矩形';
+        return LocalizationService.instance.current.hollowRectangleTool_5679;
       case 'diagonalLines':
-        return '单斜线';
+        return LocalizationService.instance.current.diagonalLinesTool_9023;
       case 'crossLines':
-        return '交叉线';
+        return LocalizationService.instance.current.crossLinesTool_3467;
       case 'dotGrid':
-        return '点阵';
+        return LocalizationService.instance.current.dotGridTool_7901;
       case 'freeDrawing':
-        return '像素笔';
+        return LocalizationService.instance.current.pixelPenTool_1245;
       case 'circle':
-        return '圆形';
+        return LocalizationService.instance.current.circleTool_5689;
       case 'text':
-        return '文本';
+        return LocalizationService.instance.current.textTool_9034;
       case 'eraser':
-        return '橡皮擦';
+        return LocalizationService.instance.current.eraserTool_3478;
       case 'imageArea':
-        return '图片选区';
+        return LocalizationService.instance.current.imageSelectionTool_7912;
       default:
         return tool;
     }
@@ -1047,7 +1047,7 @@ class ToolSettingsSection extends StatelessWidget {
 
       // 测试语音播放，使用当前设置的语言
       final currentLanguage = ttsSettings.language;
-      String testText = '这是一个语音合成测试，当前设置已应用。';
+      String testText = LocalizationService.instance.current.ttsTestText_4821;
 
       // 根据语言调整测试文本
       if (currentLanguage != null) {
@@ -1102,7 +1102,7 @@ class ToolSettingsSection extends StatelessWidget {
                 'यह टेक्स्ट-टू-स्पीच परीक्षण है। वर्तमान सेटिंग्स लागू की गई हैं।';
             break;
           default:
-            testText = '这是一个语音合成测试，当前设置已应用。';
+            testText = LocalizationService.instance.current.ttsTestText_4821;
         }
       }
 
@@ -1135,37 +1135,37 @@ class ToolSettingsSection extends StatelessWidget {
 
   /// 获取语言显示名称 (用于测试反馈)
   String _getLanguageDisplayName(String languageCode) {
-    const languageMap = {
-      'zh': '中文',
-      'zh-CN': '中文 (简体)',
-      'zh-TW': '中文 (繁体)',
-      'en': '英语',
-      'en-US': '英语 (美国)',
-      'en-GB': '英语 (英国)',
-      'ja': '日语',
-      'ja-JP': '日语',
-      'ko': '韩语',
-      'ko-KR': '韩语',
-      'fr': '法语',
-      'fr-FR': '法语',
-      'de': '德语',
-      'de-DE': '德语',
-      'es': '西班牙语',
-      'es-ES': '西班牙语',
-      'it': '意大利语',
-      'it-IT': '意大利语',
-      'pt': '葡萄牙语',
-      'pt-BR': '葡萄牙语 (巴西)',
-      'ru': '俄语',
-      'ru-RU': '俄语',
-      'ar': '阿拉伯语',
-      'ar-SA': '阿拉伯语',
-      'th': '泰语',
-      'th-TH': '泰语',
-      'vi': '越南语',
-      'vi-VN': '越南语',
-      'hi': '印地语',
-      'hi-IN': '印地语',
+    Map<String, String> languageMap = {
+      'zh': LocalizationService.instance.current.chinese_4821,
+      'zh-CN': LocalizationService.instance.current.chineseSimplified_4822,
+      'zh-TW': LocalizationService.instance.current.chineseTraditional_4823,
+      'en': LocalizationService.instance.current.english_4824,
+      'en-US': LocalizationService.instance.current.englishUS_4825,
+      'en-GB': LocalizationService.instance.current.englishUK_4826,
+      'ja': LocalizationService.instance.current.japanese_4827,
+      'ja-JP': LocalizationService.instance.current.japanese_4827,
+      'ko': LocalizationService.instance.current.korean_4828,
+      'ko-KR': LocalizationService.instance.current.korean_4828,
+      'fr': LocalizationService.instance.current.french_4829,
+      'fr-FR': LocalizationService.instance.current.french_4829,
+      'de': LocalizationService.instance.current.german_4830,
+      'de-DE': LocalizationService.instance.current.german_4830,
+      'es': LocalizationService.instance.current.spanish_4831,
+      'es-ES': LocalizationService.instance.current.spanish_4831,
+      'it': LocalizationService.instance.current.italian_4832,
+      'it-IT': LocalizationService.instance.current.italian_4832,
+      'pt': LocalizationService.instance.current.portuguese_4833,
+      'pt-BR': LocalizationService.instance.current.portugueseBrazil_4834,
+      'ru': LocalizationService.instance.current.russian_4835,
+      'ru-RU': LocalizationService.instance.current.russian_4835,
+      'ar': LocalizationService.instance.current.arabic_4836,
+      'ar-SA': LocalizationService.instance.current.arabic_4836,
+      'th': LocalizationService.instance.current.thai_4837,
+      'th-TH': LocalizationService.instance.current.thai_4837,
+      'vi': LocalizationService.instance.current.vietnamese_4838,
+      'vi-VN': LocalizationService.instance.current.vietnamese_4838,
+      'hi': LocalizationService.instance.current.hindi_4839,
+      'hi-IN': LocalizationService.instance.current.hindi_4839,
     };
     return languageMap[languageCode] ?? languageCode;
   }
@@ -1331,106 +1331,189 @@ class _TtsLanguageSelectorState extends State<_TtsLanguageSelector> {
   }
 
   String _getLanguageDisplayName(String languageCode) {
-    // 将语言代码转换为显示名称
-    const languageMap = {
+    // 将语言代码转换为显示名称，使用本地化服务
+    final localization = LocalizationService.instance.current;
+
+    switch (languageCode) {
       // 中文系列
-      'zh': '中文',
-      'zh-CN': '中文 (简体)',
-      'zh-TW': '中文 (繁体)',
-      'zh-HK': '中文 (香港)',
-      'zh-SG': '中文 (新加坡)',
+      case 'zh':
+        return localization.chinese_4821;
+      case 'zh-CN':
+        return localization.chineseSimplified_4822;
+      case 'zh-TW':
+        return localization.chineseTraditional_4823;
+      case 'zh-HK':
+        return localization.chineseHK_4894;
+      case 'zh-SG':
+        return localization.chineseSG_4895;
 
       // 英语系列
-      'en': '英语',
-      'en-US': '英语 (美国)',
-      'en-GB': '英语 (英国)',
-      'en-AU': '英语 (澳大利亚)',
-      'en-CA': '英语 (加拿大)',
-      'en-IN': '英语 (印度)',
+      case 'en':
+        return localization.english_4824;
+      case 'en-US':
+        return localization.englishUS_4825;
+      case 'en-GB':
+        return localization.englishUK_4826;
+      case 'en-AU':
+        return localization.englishAU_4896;
+      case 'en-CA':
+        return localization.englishCA_4897;
+      case 'en-IN':
+        return localization.englishIN_4898;
 
       // 日语
-      'ja': '日语',
-      'ja-JP': '日语',
+      case 'ja':
+        return localization.japanese_4827;
+      case 'ja-JP':
+        return localization.japaneseJP_4899;
 
       // 韩语
-      'ko': '韩语',
-      'ko-KR': '韩语',
+      case 'ko':
+        return localization.korean_4828;
+      case 'ko-KR':
+        return localization.koreanKR_4900;
 
       // 欧洲语言
-      'fr': '法语',
-      'fr-FR': '法语 (法国)',
-      'fr-CA': '法语 (加拿大)',
-      'de': '德语',
-      'de-DE': '德语',
-      'es': '西班牙语',
-      'es-ES': '西班牙语 (西班牙)',
-      'es-MX': '西班牙语 (墨西哥)',
-      'it': '意大利语',
-      'it-IT': '意大利语',
-      'pt': '葡萄牙语',
-      'pt-BR': '葡萄牙语 (巴西)',
-      'pt-PT': '葡萄牙语 (葡萄牙)',
-      'ru': '俄语',
-      'ru-RU': '俄语',
-      'nl': '荷兰语',
-      'nl-NL': '荷兰语',
+      case 'fr':
+        return localization.french_4829;
+      case 'fr-FR':
+        return localization.frenchFR_4882;
+      case 'fr-CA':
+        return localization.frenchCA_4883;
+      case 'de':
+        return localization.german_4830;
+      case 'de-DE':
+        return localization.germanDE_4884;
+      case 'es':
+        return localization.spanish_4831;
+      case 'es-ES':
+        return localization.spanishES_4885;
+      case 'es-MX':
+        return localization.spanishMX_4886;
+      case 'it':
+        return localization.italian_4832;
+      case 'it-IT':
+        return localization.italianIT_4887;
+      case 'pt':
+        return localization.portuguese_4833;
+      case 'pt-BR':
+        return localization.portugueseBrazil_4834;
+      case 'pt-PT':
+        return localization.portuguesePT_4888;
+      case 'ru':
+        return localization.russian_4835;
+      case 'ru-RU':
+        return localization.russianRU_4889;
+      case 'nl':
+        return localization.dutch_4840;
+      case 'nl-NL':
+        return localization.dutchNL_4841;
 
       // 北欧语言
-      'sv': '瑞典语',
-      'sv-SE': '瑞典语',
-      'da': '丹麦语',
-      'da-DK': '丹麦语',
-      'no': '挪威语',
-      'no-NO': '挪威语',
-      'fi': '芬兰语',
-      'fi-FI': '芬兰语',
+      case 'sv':
+        return localization.swedish_4842;
+      case 'sv-SE':
+        return localization.swedishSE_4843;
+      case 'da':
+        return localization.danish_4844;
+      case 'da-DK':
+        return localization.danishDK_4845;
+      case 'no':
+        return localization.norwegian_4846;
+      case 'no-NO':
+        return localization.norwegianNO_4847;
+      case 'fi':
+        return localization.finnish_4848;
+      case 'fi-FI':
+        return localization.finnishFI_4849;
 
       // 东欧语言
-      'pl': '波兰语',
-      'pl-PL': '波兰语',
-      'cs': '捷克语',
-      'cs-CZ': '捷克语',
-      'hu': '匈牙利语',
-      'hu-HU': '匈牙利语',
-      'ro': '罗马尼亚语',
-      'ro-RO': '罗马尼亚语',
-      'bg': '保加利亚语',
-      'bg-BG': '保加利亚语',
-      'hr': '克罗地亚语',
-      'hr-HR': '克罗地亚语',
-      'sk': '斯洛伐克语',
-      'sk-SK': '斯洛伐克语',
-      'sl': '斯洛文尼亚语',
-      'sl-SI': '斯洛文尼亚语',
-      'et': '爱沙尼亚语',
-      'et-EE': '爱沙尼亚语',
-      'lv': '拉脱维亚语',
-      'lv-LV': '拉脱维亚语',
-      'lt': '立陶宛语',
-      'lt-LT': '立陶宛语',
+      case 'pl':
+        return localization.polish_4850;
+      case 'pl-PL':
+        return localization.polishPL_4851;
+      case 'cs':
+        return localization.czech_4852;
+      case 'cs-CZ':
+        return localization.czechCZ_4853;
+      case 'hu':
+        return localization.hungarian_4854;
+      case 'hu-HU':
+        return localization.hungarianHU_4855;
+      case 'ro':
+        return localization.romanian_4856;
+      case 'ro-RO':
+        return localization.romanianRO_4857;
+      case 'bg':
+        return localization.bulgarian_4858;
+      case 'bg-BG':
+        return localization.bulgarianBG_4859;
+      case 'hr':
+        return localization.croatian_4860;
+      case 'hr-HR':
+        return localization.croatianHR_4861;
+      case 'sk':
+        return localization.slovak_4862;
+      case 'sk-SK':
+        return localization.slovakSK_4863;
+      case 'sl':
+        return localization.slovenian_4864;
+      case 'sl-SI':
+        return localization.slovenianSI_4865;
+      case 'et':
+        return localization.estonian_4866;
+      case 'et-EE':
+        return localization.estonianEE_4867;
+      case 'lv':
+        return localization.latvian_4868;
+      case 'lv-LV':
+        return localization.latvianLV_4869;
+      case 'lt':
+        return localization.lithuanian_4870;
+      case 'lt-LT':
+        return localization.lithuanianLT_4871;
 
       // 其他语言
-      'ar': '阿拉伯语',
-      'ar-SA': '阿拉伯语',
-      'th': '泰语',
-      'th-TH': '泰语',
-      'vi': '越南语',
-      'vi-VN': '越南语',
-      'hi': '印地语',
-      'hi-IN': '印地语',
-      'tr': '土耳其语',
-      'tr-TR': '土耳其语',
-      'he': '希伯来语',
-      'he-IL': '希伯来语',
-      'id': '印尼语',
-      'id-ID': '印尼语',
-      'ms': '马来语',
-      'ms-MY': '马来语',
-      'tl': '菲律宾语',
-      'tl-PH': '菲律宾语',
-    };
+      case 'ar':
+        return localization.arabic_4836;
+      case 'ar-SA':
+        return localization.arabicSA_4890;
+      case 'th':
+        return localization.thai_4837;
+      case 'th-TH':
+        return localization.thaiTH_4891;
+      case 'vi':
+        return localization.vietnamese_4838;
+      case 'vi-VN':
+        return localization.vietnameseVN_4892;
+      case 'hi':
+        return localization.hindi_4839;
+      case 'hi-IN':
+        return localization.hindiIN_4893;
+      case 'tr':
+        return localization.turkish_4872;
+      case 'tr-TR':
+        return localization.turkishTR_4873;
+      case 'he':
+        return localization.hebrew_4874;
+      case 'he-IL':
+        return localization.hebrewIL_4875;
+      case 'id':
+        return localization.indonesian_4876;
+      case 'id-ID':
+        return localization.indonesianID_4877;
+      case 'ms':
+        return localization.malay_4878;
+      case 'ms-MY':
+        return localization.malayMY_4879;
+      case 'tl':
+        return localization.filipino_4880;
+      case 'tl-PH':
+        return localization.filipinoPH_4881;
 
-    return languageMap[languageCode] ?? languageCode;
+      default:
+        return languageCode;
+    }
   }
 
   @override

@@ -10,7 +10,7 @@ import 'map_database_service.dart';
 import 'vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
 import 'map_localization_service.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 合并数据库导出服务
@@ -148,13 +148,13 @@ class CombinedDatabaseExporter {
         await file.writeAsString(jsonString);
 
         debugPrint('''
-合并数据库导出成功:
-- 文件路径: $outputFile
-- 导出版本: $mapVersion
-- 总项目数量: $totalItems
-- 包含地图: $includeMaps
-- 包含图例: $includeLegends
-- 包含本地化: $includeLocalizations
+${LocalizationService.instance.current.databaseExportSuccess_7421}:
+- ${LocalizationService.instance.current.filePath_8423}: \$outputFile
+- ${LocalizationService.instance.current.exportVersion_9234}: \$mapVersion
+- ${LocalizationService.instance.current.totalItemsCount_1345}: \$totalItems
+- ${LocalizationService.instance.current.includeMaps_2456}: \$includeMaps
+- ${LocalizationService.instance.current.includeLegends_3567}: \$includeLegends
+- ${LocalizationService.instance.current.includeLocalizations_4678}: \$includeLocalizations
         ''');
 
         return outputFile;

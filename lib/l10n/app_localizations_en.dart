@@ -999,22 +999,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authenticationTimeout_7281 => '认证流程超时';
 
   @override
-  String get serverChallengeReceived_4289 => '收到服务器挑战';
+  String get serverChallengeReceived_4289 => 'serverChallengeReceived';
 
   @override
-  String get authFailedChallengeDecrypt_7281 => '认证失败: 挑战解密失败';
+  String get authFailedChallengeDecrypt_7281 => 'authFailedChallengeDecrypt';
 
   @override
   String challengeResponseSentResult(Object sendResult) {
-    return '已发送挑战响应，结果: $sendResult';
+    return 'challengeResponseSentResult: $sendResult';
   }
 
   @override
-  String get authenticationSuccess_7421 => '认证成功';
+  String get authenticationSuccess_7421 => 'authenticationSuccess';
 
   @override
   String authenticationFailed(Object reason) {
-    return '认证失败: $reason';
+    return 'authenticationFailed: $reason';
   }
 
   @override
@@ -1024,12 +1024,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serverErrorResponse(Object error) {
-    return '服务器返回错误: $error';
+    return 'serverErrorResponse: $error';
   }
 
   @override
-  String ignoredMessageType_7281(Object type) {
-    return '忽略消息类型: $type';
+  String ignoredMessageType_7281(Object messageType) {
+    return 'ignoredMessageType: $messageType';
   }
 
   @override
@@ -2180,13 +2180,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get floatingWindowExample_4271 => '浮动窗口示例';
 
   @override
-  String get basicFloatingWindowExample_4821 => '这是一个基础的浮动窗口示例';
+  String get basicFloatingWindowExample_4821 => '基础浮动窗口示例';
 
   @override
-  String get windowContentDescription_4821 => '窗口内容可以是任何Widget，包括文本、按钮、表单等。';
+  String get windowContentDescription_4821 => '窗口内容描述';
 
   @override
-  String get windowSizeDescription_5739 => '窗口会自动适应屏幕大小，默认占用90%的屏幕宽度和高度。';
+  String get windowSizeDescription_5739 => '窗口尺寸描述';
 
   @override
   String get exampleInputField_4521 => '示例输入框';
@@ -2195,7 +2195,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelButton_7284 => '取消';
 
   @override
-  String get confirmButton_4821 => '确定';
+  String get confirmButton_4821 => '确认';
 
   @override
   String get notifications_4821 => '通知';
@@ -2251,7 +2251,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dragFeature_4521 => '拖拽功能';
 
   @override
-  String get windowDragHint_4821 => '这个窗口支持拖拽移动。您可以点击并拖拽标题栏来移动窗口位置。';
+  String get windowDragHint_4821 => '拖拽标题栏可移动窗口';
 
   @override
   String get windowBoundaryHint_4821 => '窗口会自动限制在屏幕边界内，但允许部分内容移出屏幕边缘。';
@@ -2762,7 +2762,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderType_4821 => '文件夹';
 
   @override
-  String get fileType_4821 => '文件类型';
+  String get fileType_4821 => '文件';
 
   @override
   String creationTimeLabel_5421(Object createdTime) {
@@ -2804,15 +2804,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileType_5421 => '文件';
 
   @override
-  String get fileSize_4821 => '大小';
+  String get fileSize_4821 => '文件大小';
 
   @override
   String get modifiedTimeLabel_4821 => '修改时间';
 
   @override
-  String creationTime_7281(Object date) {
-    return '创建时间: $date';
-  }
+  String get creationTime_7281 => '创建时间';
 
   @override
   String get renameSuccess_4821 => '重命名成功';
@@ -3441,7 +3439,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String playbackFailed_4821(Object e) {
-    return '播放操作失败: $e';
+    return '播放失败 - $e';
   }
 
   @override
@@ -6974,7 +6972,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backButton_75 => '返回';
 
   @override
-  String get noAvailableLayers_4721 => '暂无可用图层\n请先创建或显示图层';
+  String get noAvailableLayers_4721 => '无可用图层';
 
   @override
   String get addLayer_7281 => '添加图层';
@@ -8456,7 +8454,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get batchUpdateWarning_7281 => '警告：没有批量更新接口，无法正确移动组';
 
   @override
-  String get bindLegendGroup_5421 => '点击绑定图例组';
+  String get bindLegendGroup_5421 => '绑定图例组';
 
   @override
   String get legendGroupUnavailable_5421 => '图例组不可用';
@@ -8551,7 +8549,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get selectedWithMultiple_4827 => '已选中 (同时选择)';
+  String get selectedWithMultiple_4827 => '已选中多个';
 
   @override
   String get layerGroupSelectionCancelled_4821 => '已取消图层组选择';
@@ -15567,13 +15565,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get authFailedMessage_4821 => '认证失败，请检查用户名和密码';
+  String get authFailedMessage_4821 => '认证失败';
 
   @override
-  String get invalidServerPath_4821 => '服务器地址不正确或路径不存在';
+  String get invalidServerPath_4821 => '无效的服务器路径';
 
   @override
-  String get connectionTimeoutError_4821 => '连接超时，请检查网络和服务器地址';
+  String get connectionTimeoutError_4821 => '连接超时';
 
   @override
   String fileDownloadSuccess(Object fullRemotePath, Object localFilePath) {
@@ -15848,7 +15846,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get windowSizeResetToDefault_4821 => '窗口大小已重置为默认值';
+  String get windowSizeResetToDefault_4821 => '窗口大小设置已重置为默认值';
 
   @override
   String get autoSaveWindowSizeDisabled_7281 => '自动保存窗口大小已禁用，跳过保存';
@@ -16247,4 +16245,1057 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clickToStartRecording_4821 => '点击开始录制按键';
+
+  @override
+  String get conflictCreated_7425 => '冲突已创建';
+
+  @override
+  String get remoteElementLockFailure_4821 => '处理远程元素锁定失败';
+
+  @override
+  String get remoteUserLeaveError_4728 => '处理远程用户离开失败';
+
+  @override
+  String get remoteConflictError_7285 => '处理远程冲突失败';
+
+  @override
+  String get inputLabelHint_4521 => '输入标签名称';
+
+  @override
+  String get enterFullscreen_4821 => '全屏';
+
+  @override
+  String get basicFloatingWindow_4821 => '基础浮动窗口';
+
+  @override
+  String get settingsManagement_4821 => '设置管理';
+
+  @override
+  String get configureAppSettings_7285 => '配置应用程序设置和首选项';
+
+  @override
+  String get refresh_4821 => '刷新';
+
+  @override
+  String get smallDialogTitle_4821 => '小型对话框';
+
+  @override
+  String get settings_7281 => '设置';
+
+  @override
+  String get extensionWindowTitle_7281 => '扩展方法窗口';
+
+  @override
+  String get draggableWindowTitle_4521 => '可拖拽窗口';
+
+  @override
+  String get voiceNoteLabel_7281 => '语音便签';
+
+  @override
+  String get deleteNoteLabel_4821 => '删除便签';
+
+  @override
+  String get radialMenuInstructions_7281 =>
+      '1. 按住中键或触摸板双指按下调起菜单\n2. 拖动到菜单项上会自动进入子菜单\n3. 拖回中心区域返回主菜单\n4. 松开鼠标/手指执行选择的动作\n5. 开启调试模式可以看到连线和角度信息';
+
+  @override
+  String get eraserTool_4821 => '橡皮擦';
+
+  @override
+  String get duplicateLayer_4821 => '复制图层';
+
+  @override
+  String get rotate_4822 => '旋转';
+
+  @override
+  String get zoom_4821 => '缩放';
+
+  @override
+  String get exportLabel_7421 => '导出';
+
+  @override
+  String get properties_4281 => '属性';
+
+  @override
+  String get viewDetails_4821 => '查看详情';
+
+  @override
+  String get share_4821 => '分享';
+
+  @override
+  String get fileDetails_4722 => '文件详情';
+
+  @override
+  String get basicInfo_4821 => '基本信息';
+
+  @override
+  String get copySuffix_3632 => '(副本)';
+
+  @override
+  String get copyWithNumber_3632 => '副本';
+
+  @override
+  String get copyWithTimestamp_3632 => '副本';
+
+  @override
+  String get fastRewind10Seconds_7281 => '快退10秒';
+
+  @override
+  String get fastForward10Seconds_4821 => '快进10秒';
+
+  @override
+  String get playbackMode_1234 => '播放模式';
+
+  @override
+  String get fastForward10Seconds_7281 => '快进10秒';
+
+  @override
+  String get htmlParseFailed_7281 => '解析失败';
+
+  @override
+  String get disabledIndicator_7421 => '(禁用)';
+
+  @override
+  String get disabledLabel_4821 => '(禁用)';
+
+  @override
+  String cleanScriptHandler_7281(Object scriptId) {
+    return '清理脚本函数处理器: $scriptId';
+  }
+
+  @override
+  String get unknownClient_7284 => '未知客户端';
+
+  @override
+  String get stickyNoteTitle_7421 => '便签';
+
+  @override
+  String get scriptManagement_4821 => '脚本管理';
+
+  @override
+  String get layersTitle_7281 => '图层';
+
+  @override
+  String get shortcutVersion_4821 => '快捷键版本';
+
+  @override
+  String get addColorFailed_4829 => '添加颜色失败';
+
+  @override
+  String get colorAlreadyExists_1537 => '该颜色已存在于自定义颜色中';
+
+  @override
+  String get imageUploadInstructions_4821 =>
+      '1. 点击\"上传图片\"选择文件或\"剪贴板\"粘贴图片\n2. 在画布上拖拽创建选区\n3. 图片将自动适应选区大小\n4. 可通过Z层级检视器调整';
+
+  @override
+  String get imageProcessingInstructions_4821 =>
+      '1. 点击\"上传图片\"选择文件或\"剪贴板\"粘贴图片\n2. 在画布上拖拽创建选区\n3. 图片将自动适应选区大小\n4. 可通过Z层级检视器调整';
+
+  @override
+  String get rightClickToViewProperties_7421 => '右键查看属性';
+
+  @override
+  String get filterRemoved_4821 => '已移除';
+
+  @override
+  String boundGroupsCount(Object boundGroupsCount) {
+    return '已绑定 $boundGroupsCount 个图例组';
+  }
+
+  @override
+  String layerGroupWithCount(Object count) {
+    return '图层组 ($count 个图层)';
+  }
+
+  @override
+  String selectedLegendItem_7421(Object count, Object currentIndex) {
+    return '当前选中: $currentIndex/$count';
+  }
+
+  @override
+  String get clickToSelectLegend_5832 => '点击选择图例项';
+
+  @override
+  String get legendLinkOptional_4822 => '图例链接 (可选)';
+
+  @override
+  String get inputUrlOrSelectVfsFile_4823 => '输入网络链接或选择VFS文件';
+
+  @override
+  String get legendPathLabel_4821 => '图例路径 (.legend)';
+
+  @override
+  String get legendPathHint_4821 => '选择或输入.legend文件路径';
+
+  @override
+  String get isSelectedNote_7425 => '是否选中';
+
+  @override
+  String get noteLayerHint_8421 => '便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层';
+
+  @override
+  String get pageLayout_7281 => '页面布局';
+
+  @override
+  String get paperSettings_4821 => '纸张设置';
+
+  @override
+  String get paperSize_7281 => '纸张大小';
+
+  @override
+  String get pageOrientation_3632 => '方向';
+
+  @override
+  String get spacingSettings_4821 => '间距设置';
+
+  @override
+  String get marginLabel_7281 => '页边距';
+
+  @override
+  String get imageSpacing_3632 => '图片间距';
+
+  @override
+  String get fileName_7891 => '文件名';
+
+  @override
+  String get exportInfoTitle_4728 => '导出信息';
+
+  @override
+  String get unnamedLayer_4821 => '未命名图层';
+
+  @override
+  String get unknownTime_4821 => '未知';
+
+  @override
+  String get help_7282 => '帮助';
+
+  @override
+  String get colorLabel_4821 => '颜色';
+
+  @override
+  String get restoreMaximizedStateOnStartup_4281 => '启动时恢复窗口的最大化状态';
+
+  @override
+  String get rememberMaximizeState_4821 => '记住最大化状态';
+
+  @override
+  String get customWindowSize_4271 => '自定义窗口大小';
+
+  @override
+  String get windowWidth_4821 => '窗口宽度';
+
+  @override
+  String get manualWindowSizeSetting_4821 => '手动设置窗口的默认大小';
+
+  @override
+  String currentSettingWithWidth_7421(Object width) {
+    return '当前设置: ${width}px';
+  }
+
+  @override
+  String get windowHeight_4271 => '窗口高度';
+
+  @override
+  String currentSettings_7421(Object value) {
+    return '当前设置: ${value}px';
+  }
+
+  @override
+  String get resetToDefault_4271 => '重置为默认';
+
+  @override
+  String get drawerWidthSetting_4521 => '抽屉宽度设置';
+
+  @override
+  String get drawerWidth_4271 => '抽屉宽度';
+
+  @override
+  String get layerLegendSettingsWidth_4821 => '设置图层图例绑定、图例组管理和Z层级检视器的宽度';
+
+  @override
+  String get resetLayoutSettings_4271 => '重置布局设置';
+
+  @override
+  String get confirmResetLayoutSettings_4821 => '确定要将布局设置重置为默认值吗？此操作不可撤销。';
+
+  @override
+  String get cancel_7281 => '取消';
+
+  @override
+  String get drawingPanel_1234 => '绘图面板';
+
+  @override
+  String get layerPanel_5678 => '图层面板';
+
+  @override
+  String get legendPanel_9012 => '图例面板';
+
+  @override
+  String get stickyNotePanel_3456 => '便签面板';
+
+  @override
+  String get scriptPanel_7890 => '脚本面板';
+
+  @override
+  String get sidebar_1235 => '侧边栏';
+
+  @override
+  String get propertiesPanel_6789 => '属性面板';
+
+  @override
+  String get toolbar_0123 => '工具栏';
+
+  @override
+  String get layoutResetSuccess_4821 => '布局设置已重置';
+
+  @override
+  String get resetWindowSize_4271 => '重置窗口大小';
+
+  @override
+  String panelDefaultState_7428(Object state) {
+    return '面板默认$state状态';
+  }
+
+  @override
+  String get confirmResetWindowSize_4821 => '确定要将窗口大小重置为默认值吗？';
+
+  @override
+  String get resetButton_4521 => '重置';
+
+  @override
+  String get penTool_1234 => '钢笔';
+
+  @override
+  String get brushTool_5678 => '画笔';
+
+  @override
+  String get lineTool_9012 => '直线';
+
+  @override
+  String get dashedLineTool_3456 => '虚线';
+
+  @override
+  String get arrowTool_7890 => '箭头';
+
+  @override
+  String get solidRectangleTool_1235 => '实心矩形';
+
+  @override
+  String get hollowRectangleTool_5679 => '空心矩形';
+
+  @override
+  String get diagonalLinesTool_9023 => '单斜线';
+
+  @override
+  String get crossLinesTool_3467 => '交叉线';
+
+  @override
+  String get dotGridTool_7901 => '点阵';
+
+  @override
+  String get pixelPenTool_1245 => '像素笔';
+
+  @override
+  String get circleTool_5689 => '圆形';
+
+  @override
+  String get textTool_9034 => '文本';
+
+  @override
+  String get eraserTool_3478 => '橡皮擦';
+
+  @override
+  String get imageSelectionTool_7912 => '图片选区';
+
+  @override
+  String get notSet_8921 => '未设置';
+
+  @override
+  String get copyWithTimestamp_8254 => '副本';
+
+  @override
+  String get configUpdated_42 => '配置已更新';
+
+  @override
+  String get configAdded_17 => '配置已添加';
+
+  @override
+  String get editAuthAccount_5421 => '编辑认证账户';
+
+  @override
+  String get addAuthAccount_8753 => '添加认证账户';
+
+  @override
+  String get accountNameHint_7532 => '例如：我的账户';
+
+  @override
+  String get usernameLabel_4521 => '用户名';
+
+  @override
+  String get usernameRequired_4821 => '请输入用户名';
+
+  @override
+  String get enterPassword_4821 => '请输入密码';
+
+  @override
+  String get passwordKeepEmpty_1234 => '密码（留空保持不变）';
+
+  @override
+  String get password_5678 => '密码';
+
+  @override
+  String get saveButton_5421 => '保存';
+
+  @override
+  String get addButton_5421 => '添加';
+
+  @override
+  String get accountUpdated_5421 => '账户已更新';
+
+  @override
+  String get accountAdded_5421 => '账户已添加';
+
+  @override
+  String get serverUrlRequired_4821 => '请输入服务器 URL';
+
+  @override
+  String get invalidUrlPrompt_7281 => '请输入有效的 URL';
+
+  @override
+  String get storageFolderLabel_4821 => '存储文件夹';
+
+  @override
+  String get folderNameRules_4821 =>
+      '只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)，不能包含中文字符，长度不超过100字符';
+
+  @override
+  String get inputFolderPath_4821 => '请输入存储文件夹路径';
+
+  @override
+  String get storagePathLengthExceeded_4821 => '存储路径长度不能超过100个字符';
+
+  @override
+  String get pathNoChineseChars_4821 => '存储路径不能包含中文字符';
+
+  @override
+  String get invalidPathCharactersError_4821 =>
+      '存储路径只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)';
+
+  @override
+  String get invalidPathFormat_4821 => '无效的路径格式';
+
+  @override
+  String get authenticationAccount_7281 => '认证账户';
+
+  @override
+  String get enableConfiguration_4271 => '启用配置';
+
+  @override
+  String get selectAuthAccount_4821 => '请选择认证账户';
+
+  @override
+  String get webPlatform_1234 => 'Web平台';
+
+  @override
+  String get currentPlatform_5678 => '此平台';
+
+  @override
+  String get webCopyHint_9012 => 'Web平台';
+
+  @override
+  String get nativeCopyHint_3456 => '此平台';
+
+  @override
+  String get databaseExportSuccess_7421 => '合并数据库导出成功';
+
+  @override
+  String get filePath_8423 => '文件路径';
+
+  @override
+  String get exportVersion_9234 => '导出版本';
+
+  @override
+  String get totalItemsCount_1345 => '总项目数量';
+
+  @override
+  String get includeMaps_2456 => '包含地图';
+
+  @override
+  String get includeLegends_3567 => '包含图例';
+
+  @override
+  String get includeLocalizations_4678 => '包含本地化';
+
+  @override
+  String get importFailed_7281 => '导入失败';
+
+  @override
+  String get mapImportFailed_4728 => '导入地图失败';
+
+  @override
+  String tempQueuePlayFailed_4829(Object e) {
+    return '临时队列播放失败 - $e';
+  }
+
+  @override
+  String get pauseFailed_7281 => '暂停失败';
+
+  @override
+  String get failedToGetAudioFile_4821 => '无法从VFS获取音频文件';
+
+  @override
+  String get muteToggleFailed_7281 => '切换静音失败';
+
+  @override
+  String setAudioBalanceFailed_4821(Object e) {
+    return '设置音频平衡失败 - $e';
+  }
+
+  @override
+  String jsonParseError_7282(Object error) {
+    return 'Error parsing options JSON: $error';
+  }
+
+  @override
+  String voiceSynthesisLog_7283(Object text) {
+    return '语音合成: \"$text\"';
+  }
+
+  @override
+  String languageLog_7284(Object language) {
+    return ', language: $language';
+  }
+
+  @override
+  String speechRateLog_7285(Object rate) {
+    return ', rate: $rate';
+  }
+
+  @override
+  String volumeLog_7286(Object volume) {
+    return ', volume: $volume';
+  }
+
+  @override
+  String pitchLog_7287(Object pitch) {
+    return ', pitch: $pitch';
+  }
+
+  @override
+  String voiceLog_7288(Object voice) {
+    return ', voice: $voice';
+  }
+
+  @override
+  String get tempFileGenerationFailed_7281 => '生成临时文件失败';
+
+  @override
+  String get connectionFailed_9372 => '连接失败';
+
+  @override
+  String connectionFailedWithError_7281(Object error) {
+    return '连接失败：$error';
+  }
+
+  @override
+  String imageSelectionError_4829(Object e) {
+    return '选择图片时发生错误: $e';
+  }
+
+  @override
+  String get unknownReason_7421 => '未知原因';
+
+  @override
+  String get unknownError_7421 => '未知错误';
+
+  @override
+  String get drawingToolsTitle_4722 => '绘制工具';
+
+  @override
+  String get noVisibleLayersDisabled_4723 => '无可见图层，绘制工具已禁用';
+
+  @override
+  String drawToStickyNote_4724(Object title) {
+    return '绘制到便签: $title';
+  }
+
+  @override
+  String drawToLayer_4725(Object name) {
+    return '绘制到: $name';
+  }
+
+  @override
+  String drawToDefaultLayer_4726(Object name) {
+    return '绘制到: $name (默认最上层)';
+  }
+
+  @override
+  String selectedLayerGroup_4727(Object count) {
+    return '选中图层组 ($count 个图层)';
+  }
+
+  @override
+  String get noToolSelected_4728 => '未选择工具';
+
+  @override
+  String editScriptTitle(Object scriptName) {
+    return '编辑脚本: $scriptName';
+  }
+
+  @override
+  String get closeEditorTooltip_7421 => '关闭编辑器';
+
+  @override
+  String get switchToLightThemeTooltip_7421 => '切换到浅色主题';
+
+  @override
+  String get switchToDarkThemeTooltip_8532 => '切换到深色主题';
+
+  @override
+  String get saveScriptTooltip_4821 => '保存脚本';
+
+  @override
+  String get selectPreviousLayer_3821 => '选择上一个图层';
+
+  @override
+  String get selectNextLayer_3822 => '选择下一个图层';
+
+  @override
+  String get selectPreviousLayerGroup_3823 => '选择上一个图层组';
+
+  @override
+  String get selectNextLayerGroup_3824 => '选择下一个图层组';
+
+  @override
+  String get openPreviousLegendGroup_3825 => '打开上一个图例组';
+
+  @override
+  String get openNextLegendGroup_3826 => '打开下一个图例组';
+
+  @override
+  String get openLegendGroupDrawer_3827 => '打开图例组绑定抽屉';
+
+  @override
+  String get clearLayerSelection_3828 => '清除图层/图层组选择';
+
+  @override
+  String get undo_3829 => '撤销';
+
+  @override
+  String get redo_3830 => '重做';
+
+  @override
+  String get save_3831 => '保存';
+
+  @override
+  String get copy_3832 => '复制';
+
+  @override
+  String get paste_3833 => '粘贴';
+
+  @override
+  String get delete_3834 => '删除';
+
+  @override
+  String get selectLayerGroup1_3835 => '选择图层组 1';
+
+  @override
+  String get selectLayerGroup2_3836 => '选择图层组 2';
+
+  @override
+  String get selectLayerGroup3_3837 => '选择图层组 3';
+
+  @override
+  String get selectLayerGroup4_3838 => '选择图层组 4';
+
+  @override
+  String get selectLayerGroup5_3839 => '选择图层组 5';
+
+  @override
+  String get selectLayerGroup6_3840 => '选择图层组 6';
+
+  @override
+  String get selectLayerGroup7_3841 => '选择图层组 7';
+
+  @override
+  String get selectLayerGroup8_3842 => '选择图层组 8';
+
+  @override
+  String get selectLayerGroup9_3843 => '选择图层组 9';
+
+  @override
+  String get selectLayerGroup10_3844 => '选择图层组 10';
+
+  @override
+  String get selectLayer1_3845 => '选择图层 1';
+
+  @override
+  String get selectLayer2_3846 => '选择图层 2';
+
+  @override
+  String get selectLayer3_3847 => '选择图层 3';
+
+  @override
+  String get selectLayer4_3848 => '选择图层 4';
+
+  @override
+  String get selectLayer5_3849 => '选择图层 5';
+
+  @override
+  String get selectLayer6_3850 => '选择图层 6';
+
+  @override
+  String get selectLayer7_3851 => '选择图层 7';
+
+  @override
+  String get selectLayer8_3852 => '选择图层 8';
+
+  @override
+  String get selectLayer9_3853 => '选择图层 9';
+
+  @override
+  String get selectLayer10_3854 => '选择图层 10';
+
+  @override
+  String get selectLayer11_3855 => '选择图层 11';
+
+  @override
+  String get selectLayer12_3856 => '选择图层 12';
+
+  @override
+  String get toggleLeftSidebar_3857 => '切换左侧边栏';
+
+  @override
+  String get openZElementInspector_3858 => '打开Z元素检视器';
+
+  @override
+  String get toggleLegendManagementDrawer_3859 => '切换图例管理抽屉';
+
+  @override
+  String get hideOtherLayers_3860 => '隐藏其他图层';
+
+  @override
+  String get hideOtherLayerGroups_3861 => '隐藏其他图层组';
+
+  @override
+  String get showCurrentLayer_3862 => '显示当前图层';
+
+  @override
+  String get showCurrentLayerGroup_3863 => '显示当前图层组';
+
+  @override
+  String get hideOtherLegendGroups_3864 => '隐藏其他图例组';
+
+  @override
+  String get showCurrentLegendGroup_3865 => '显示当前图例组';
+
+  @override
+  String get showShortcutList_3866 => '显示快捷键列表';
+
+  @override
+  String get switchToPreviousVersion_3867 => '切换到上一个版本';
+
+  @override
+  String get switchToNextVersion_3868 => '切换到下一个版本';
+
+  @override
+  String get createNewVersion_3869 => '新增版本';
+
+  @override
+  String get ttsTestText_4821 => '这是一个语音合成测试，当前设置已应用。';
+
+  @override
+  String get chinese_4821 => '中文';
+
+  @override
+  String get chineseSimplified_4822 => '中文 (简体)';
+
+  @override
+  String get chineseTraditional_4823 => '中文 (繁体)';
+
+  @override
+  String get english_4824 => '英语';
+
+  @override
+  String get englishUS_4825 => '英语 (美国)';
+
+  @override
+  String get englishUK_4826 => '英语 (英国)';
+
+  @override
+  String get japanese_4827 => '日语';
+
+  @override
+  String get korean_4828 => '韩语';
+
+  @override
+  String get french_4829 => '法语';
+
+  @override
+  String get german_4830 => '德语';
+
+  @override
+  String get spanish_4831 => '西班牙语';
+
+  @override
+  String get italian_4832 => '意大利语';
+
+  @override
+  String get portuguese_4833 => '葡萄牙语';
+
+  @override
+  String get portugueseBrazil_4834 => '葡萄牙语 (巴西)';
+
+  @override
+  String get russian_4835 => '俄语';
+
+  @override
+  String get arabic_4836 => '阿拉伯语';
+
+  @override
+  String get thai_4837 => '泰语';
+
+  @override
+  String get vietnamese_4838 => '越南语';
+
+  @override
+  String get hindi_4839 => '印地语';
+
+  @override
+  String get automationScriptExample_1234 => '自动化脚本示例';
+
+  @override
+  String get totalLayers_5678 => '共有';
+
+  @override
+  String get layers_9101 => '个图层';
+
+  @override
+  String get iterateAllElements_1121 => '遍历所有元素';
+
+  @override
+  String get element_3141 => '元素';
+
+  @override
+  String get type_5161 => '类型';
+
+  @override
+  String get animationScriptExample_7181 => '动画脚本示例';
+
+  @override
+  String get animateColorChange_9202 => '动画改变颜色';
+
+  @override
+  String get animateElementMovement_1222 => '动画移动元素';
+
+  @override
+  String get filterScriptExample_3242 => '过滤脚本示例';
+
+  @override
+  String get foundBlueRectangles_5262 => '找到';
+
+  @override
+  String get blueRectangles_7282 => '个蓝色矩形';
+
+  @override
+  String get statisticsScriptExample_9303 => '统计脚本示例';
+
+  @override
+  String get layer_1323 => '图层';
+
+  @override
+  String get elements_3343 => '个元素';
+
+  @override
+  String get total_5363 => '总计';
+
+  @override
+  String get elements_7383 => '个元素';
+
+  @override
+  String get user_4821 => '用户';
+
+  @override
+  String get dutch_4840 => '荷兰语';
+
+  @override
+  String get dutchNL_4841 => '荷兰语 (荷兰)';
+
+  @override
+  String get swedish_4842 => '瑞典语';
+
+  @override
+  String get swedishSE_4843 => '瑞典语 (瑞典)';
+
+  @override
+  String get danish_4844 => '丹麦语';
+
+  @override
+  String get danishDK_4845 => '丹麦语 (丹麦)';
+
+  @override
+  String get norwegian_4846 => '挪威语';
+
+  @override
+  String get norwegianNO_4847 => '挪威语 (挪威)';
+
+  @override
+  String get finnish_4848 => '芬兰语';
+
+  @override
+  String get finnishFI_4849 => '芬兰语 (芬兰)';
+
+  @override
+  String get polish_4850 => '波兰语';
+
+  @override
+  String get polishPL_4851 => '波兰语 (波兰)';
+
+  @override
+  String get czech_4852 => '捷克语';
+
+  @override
+  String get czechCZ_4853 => '捷克语 (捷克)';
+
+  @override
+  String get hungarian_4854 => '匈牙利语';
+
+  @override
+  String get hungarianHU_4855 => '匈牙利语 (匈牙利)';
+
+  @override
+  String get romanian_4856 => '罗马尼亚语';
+
+  @override
+  String get romanianRO_4857 => '罗马尼亚语 (罗马尼亚)';
+
+  @override
+  String get bulgarian_4858 => '保加利亚语';
+
+  @override
+  String get bulgarianBG_4859 => '保加利亚语 (保加利亚)';
+
+  @override
+  String get croatian_4860 => '克罗地亚语';
+
+  @override
+  String get croatianHR_4861 => '克罗地亚语 (克罗地亚)';
+
+  @override
+  String get slovak_4862 => '斯洛伐克语';
+
+  @override
+  String get slovakSK_4863 => '斯洛伐克语 (斯洛伐克)';
+
+  @override
+  String get slovenian_4864 => '斯洛文尼亚语';
+
+  @override
+  String get slovenianSI_4865 => '斯洛文尼亚语 (斯洛文尼亚)';
+
+  @override
+  String get estonian_4866 => '爱沙尼亚语';
+
+  @override
+  String get estonianEE_4867 => '爱沙尼亚语 (爱沙尼亚)';
+
+  @override
+  String get latvian_4868 => '拉脱维亚语';
+
+  @override
+  String get latvianLV_4869 => '拉脱维亚语 (拉脱维亚)';
+
+  @override
+  String get lithuanian_4870 => '立陶宛语';
+
+  @override
+  String get lithuanianLT_4871 => '立陶宛语 (立陶宛)';
+
+  @override
+  String get turkish_4872 => '土耳其语';
+
+  @override
+  String get turkishTR_4873 => '土耳其语 (土耳其)';
+
+  @override
+  String get hebrew_4874 => '希伯来语';
+
+  @override
+  String get hebrewIL_4875 => '希伯来语 (以色列)';
+
+  @override
+  String get indonesian_4876 => '印尼语';
+
+  @override
+  String get indonesianID_4877 => '印尼语 (印尼)';
+
+  @override
+  String get malay_4878 => '马来语';
+
+  @override
+  String get malayMY_4879 => '马来语 (马来西亚)';
+
+  @override
+  String get filipino_4880 => '菲律宾语';
+
+  @override
+  String get filipinoPH_4881 => '菲律宾语 (菲律宾)';
+
+  @override
+  String get frenchFR_4882 => '法语 (法国)';
+
+  @override
+  String get frenchCA_4883 => '法语 (加拿大)';
+
+  @override
+  String get germanDE_4884 => '德语 (德国)';
+
+  @override
+  String get spanishES_4885 => '西班牙语 (西班牙)';
+
+  @override
+  String get spanishMX_4886 => '西班牙语 (墨西哥)';
+
+  @override
+  String get italianIT_4887 => '意大利语 (意大利)';
+
+  @override
+  String get portuguesePT_4888 => '葡萄牙语 (葡萄牙)';
+
+  @override
+  String get russianRU_4889 => '俄语 (俄罗斯)';
+
+  @override
+  String get arabicSA_4890 => '阿拉伯语 (沙特阿拉伯)';
+
+  @override
+  String get thaiTH_4891 => '泰语 (泰国)';
+
+  @override
+  String get vietnameseVN_4892 => '越南语 (越南)';
+
+  @override
+  String get hindiIN_4893 => '印地语 (印度)';
+
+  @override
+  String get chineseHK_4894 => '中文 (香港)';
+
+  @override
+  String get chineseSG_4895 => '中文 (新加坡)';
+
+  @override
+  String get englishAU_4896 => '英语 (澳大利亚)';
+
+  @override
+  String get englishCA_4897 => '英语 (加拿大)';
+
+  @override
+  String get englishIN_4898 => '英语 (印度)';
+
+  @override
+  String get japaneseJP_4899 => '日语 (日本)';
+
+  @override
+  String get koreanKR_4900 => '韩语 (韩国)';
 }

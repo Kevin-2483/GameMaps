@@ -1,0 +1,8 @@
+{
+  "tempQueuePlayFailed_4829": "临时队列播放失败 - {e}",
+  "playbackFailed_4821": "播放失败 - {e}",
+  "pauseFailed_7281": "暂停失败",
+  "failedToGetAudioFile_4821": "无法从VFS获取音频文件",
+  "muteToggleFailed_7281": "切换静音失败",
+  "setAudioBalanceFailed_4821": "设置音频平衡失败 - {e}"
+}

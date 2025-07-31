@@ -1565,7 +1565,9 @@ class VfsMapServiceImpl implements VfsMapService {
                     } else {
                       debugPrint(
                         LocalizationService.instance.current
-                            .warningCannotLoadStickerImage(element.imageHash ?? 'null'),
+                            .warningCannotLoadStickerImage(
+                              element.imageHash ?? 'null',
+                            ),
                       );
                     }
                   }

@@ -2,7 +2,7 @@
 // background_image_settings_dialog.dart
 import 'package:flutter/material.dart';
 import '../models/map_layer.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 /// 背景图片设置结果

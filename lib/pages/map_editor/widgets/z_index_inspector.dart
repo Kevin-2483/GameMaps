@@ -376,8 +376,8 @@ class ZIndexInspector extends StatelessWidget {
           ),
         _buildDetailRow(
           context,
-          '颜色',
-          '#${element.color.value.toRadixString(16).toUpperCase()}',
+          LocalizationService.instance.current.colorLabel_4821,
+          '#\${element.color.value.toRadixString(16).toUpperCase()}',
           element: element,
           propertyName: 'color',
         ),

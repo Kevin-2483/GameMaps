@@ -15,7 +15,7 @@ import 'user_preferences/user_preferences_service.dart';
 import 'audio/audio_player_service.dart';
 import 'tts_service.dart';
 import 'legend_cache_manager.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 应用清理服务

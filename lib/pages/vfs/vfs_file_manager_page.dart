@@ -415,7 +415,8 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     }
 
     // 检查基本的副本名称
-    String suggestedName = '$baseName (副本)$extension';
+    String suggestedName =
+        '$baseName ${LocalizationService.instance.current.copySuffix_7421}$extension';
     String testPath = _currentPath.isEmpty
         ? suggestedName
         : '$_currentPath/$suggestedName';
@@ -433,7 +434,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
     while (counter <= 100) {
       // 限制尝试次数避免无限循环
       suggestedName =
-          '$baseName (${LocalizationService.instance.current.copy_7421} $counter)$extension';
+          '$baseName (${LocalizationService.instance.current.copyWithNumber_3632} $counter)$extension';
       testPath = _currentPath.isEmpty
           ? suggestedName
           : '$_currentPath/$suggestedName';
@@ -450,7 +451,7 @@ class _VfsFileManagerPageState extends State<_VfsFileManagerPageContent>
 
     // 如果都存在，返回带时间戳的版本
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '$baseName (副本 $timestamp)$extension';
+    return '$baseName (${LocalizationService.instance.current.copyWithTimestamp_8254} $timestamp)$extension';
   }
 
   /// 粘贴文件

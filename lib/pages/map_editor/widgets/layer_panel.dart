@@ -718,7 +718,9 @@ class _LayerPanelState extends State<LayerPanel> {
 
   /// 构建组选择状态的文本
   String _buildGroupSelectionText(List<MapLayer> group, bool isGroupSelected) {
-    final baseText = '图层组 (${group.length} 个图层)';
+    final baseText = LocalizationService.instance.current.layerGroupWithCount(
+      group.length,
+    );
 
     if (isGroupSelected) {
       // 检查是否还有单图层选择
@@ -1216,7 +1218,7 @@ class _LayerPanelState extends State<LayerPanel> {
       filterManager.setLayerFilter(layer.id, result);
 
       final filterName = result.type == ColorFilterType.none
-          ? '已移除'
+          ? LocalizationService.instance.current.filterRemoved_4821
           : _getFilterTypeName(result.type);
       widget.onSuccess?.call(
         LocalizationService.instance.current.layerFilterSetMessage(
@@ -1914,7 +1916,9 @@ class _LayerPanelState extends State<LayerPanel> {
               const SizedBox(width: 4),
               Text(
                 boundGroupsCount > 0
-                    ? '已绑定 $boundGroupsCount 个图例组'
+                    ? LocalizationService.instance.current.boundGroupsCount(
+                        boundGroupsCount,
+                      )
                     : (hasAllLegendGroups
                           ? LocalizationService
                                 .instance
@@ -2098,7 +2102,10 @@ class _LayerPanelState extends State<LayerPanel> {
           textAlign: TextAlign.left,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 0,
+            ),
             border: InputBorder.none,
             hintText: LocalizationService.instance.current.layerNameHint_7281,
             hintStyle: const TextStyle(fontSize: 14),

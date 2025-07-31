@@ -45,7 +45,17 @@ class LayoutSettingsSection extends StatelessWidget {
               (entry) => SwitchListTile(
                 title: Text(_getPanelDisplayName(entry.key)),
                 subtitle: Text(
-                  '面板默认${entry.value ? LocalizationService.instance.current.collapsedState_5421 : LocalizationService.instance.current.expandedState_5421}状态',
+                  LocalizationService.instance.current.panelDefaultState_7428(
+                    entry.value
+                        ? LocalizationService
+                              .instance
+                              .current
+                              .collapsedState_5421
+                        : LocalizationService
+                              .instance
+                              .current
+                              .expandedState_5421,
+                  ),
                 ),
                 value: entry.value,
                 onChanged: (value) => provider.updateLayout(
@@ -125,7 +135,12 @@ class LayoutSettingsSection extends StatelessWidget {
               title: Text(
                 LocalizationService.instance.current.compactMode_7281,
               ),
-              subtitle: Text('减少界面元素间距，适合小屏幕'),
+              subtitle: Text(
+                LocalizationService
+                    .instance
+                    .current
+                    .reduceSpacingForSmallScreen_7281,
+              ),
               value: layout.compactMode,
               onChanged: (value) => provider.updateLayout(compactMode: value),
             ),
@@ -275,8 +290,18 @@ class LayoutSettingsSection extends StatelessWidget {
 
               // 记住最大化状态
               SwitchListTile(
-                title: Text('记住最大化状态'),
-                subtitle: Text('启动时恢复窗口的最大化状态'),
+                title: Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .rememberMaximizeState_4821,
+                ),
+                subtitle: Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .restoreMaximizedStateOnStartup_4281,
+                ),
                 value: layout.rememberMaximizedState,
                 onChanged: (value) =>
                     provider.updateLayout(rememberMaximizedState: value),
@@ -284,8 +309,15 @@ class LayoutSettingsSection extends StatelessWidget {
 
               // 自定义窗口大小
               ExpansionTile(
-                title: Text('自定义窗口大小'),
-                subtitle: Text('手动设置窗口的默认大小'),
+                title: Text(
+                  LocalizationService.instance.current.customWindowSize_4271,
+                ),
+                subtitle: Text(
+                  LocalizationService
+                      .instance
+                      .current
+                      .manualWindowSizeSetting_4821,
+                ),
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -293,11 +325,21 @@ class LayoutSettingsSection extends StatelessWidget {
                       children: [
                         // 窗口宽度
                         ListTile(
-                          title: Text('窗口宽度'),
+                          title: Text(
+                            LocalizationService
+                                .instance
+                                .current
+                                .windowWidth_4821,
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('当前设置: ${layout.windowWidth.round()}px'),
+                              Text(
+                                LocalizationService.instance.current
+                                    .currentSettingWithWidth_7421(
+                                      layout.windowWidth.round(),
+                                    ),
+                              ),
                               const SizedBox(height: 8),
                               Slider(
                                 value: layout.windowWidth,
@@ -314,11 +356,21 @@ class LayoutSettingsSection extends StatelessWidget {
 
                         // 窗口高度
                         ListTile(
-                          title: Text('窗口高度'),
+                          title: Text(
+                            LocalizationService
+                                .instance
+                                .current
+                                .windowHeight_4271,
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('当前设置: ${layout.windowHeight.round()}px'),
+                              Text(
+                                LocalizationService.instance.current
+                                    .currentSettings_7421(
+                                      layout.windowHeight.round(),
+                                    ),
+                              ),
                               const SizedBox(height: 8),
                               Slider(
                                 value: layout.windowHeight,
@@ -341,7 +393,12 @@ class LayoutSettingsSection extends StatelessWidget {
                               onPressed: () =>
                                   _resetWindowSize(context, provider),
                               icon: Icon(Icons.restore),
-                              label: Text('重置为默认'),
+                              label: Text(
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .resetToDefault_4271,
+                              ),
                             ),
                           ],
                         ),
@@ -356,18 +413,25 @@ class LayoutSettingsSection extends StatelessWidget {
 
             // 抽屉宽度设置
             Text(
-              '抽屉宽度设置',
+              LocalizationService.instance.current.drawerWidthSetting_4521,
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             ListTile(
-              title: Text('抽屉宽度'),
+              title: Text(
+                LocalizationService.instance.current.drawerWidth_4271,
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('设置图层图例绑定、图例组管理和Z层级检视器的宽度'),
+                  Text(
+                    LocalizationService
+                        .instance
+                        .current
+                        .layerLegendSettingsWidth_4821,
+                  ),
                   const SizedBox(height: 8),
                   Slider(
                     value: layout.drawerWidth,
@@ -391,7 +455,12 @@ class LayoutSettingsSection extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _resetLayoutSettings(context, provider),
                     icon: Icon(Icons.restore),
-                    label: Text('重置布局设置'),
+                    label: Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .resetLayoutSettings_4271,
+                    ),
                   ),
                 ),
               ],
@@ -405,21 +474,21 @@ class LayoutSettingsSection extends StatelessWidget {
   String _getPanelDisplayName(String panelKey) {
     switch (panelKey) {
       case 'drawing':
-        return '绘图面板';
+        return LocalizationService.instance.current.drawingPanel_1234;
       case 'layer':
-        return '图层面板';
+        return LocalizationService.instance.current.layerPanel_5678;
       case 'legend':
-        return '图例面板';
+        return LocalizationService.instance.current.legendPanel_9012;
       case 'stickyNote':
-        return '便签面板';
+        return LocalizationService.instance.current.stickyNotePanel_3456;
       case 'script':
-        return '脚本面板';
+        return LocalizationService.instance.current.scriptPanel_7890;
       case 'sidebar':
-        return '侧边栏';
+        return LocalizationService.instance.current.sidebar_1235;
       case 'properties':
-        return '属性面板';
+        return LocalizationService.instance.current.propertiesPanel_6789;
       case 'toolbar':
-        return '工具栏';
+        return LocalizationService.instance.current.toolbar_0123;
       default:
         return panelKey;
     }
@@ -432,12 +501,16 @@ class LayoutSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('重置布局设置'),
-        content: Text('确定要将布局设置重置为默认值吗？此操作不可撤销。'),
+        title: Text(
+          LocalizationService.instance.current.resetLayoutSettings_4271,
+        ),
+        content: Text(
+          LocalizationService.instance.current.confirmResetLayoutSettings_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_7281),
           ),
           ElevatedButton(
             onPressed: () {
@@ -455,13 +528,15 @@ class LayoutSettingsSection extends StatelessWidget {
                     defaultLayout.enableRightSideVerticalNavigation,
               );
               Navigator.of(context).pop();
-              context.showSuccessSnackBar('布局设置已重置');
+              context.showSuccessSnackBar(
+                LocalizationService.instance.current.layoutResetSuccess_4821,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: Text('重置'),
+            child: Text(LocalizationService.instance.current.resetButton_5421),
           ),
         ],
       ),
@@ -476,24 +551,31 @@ class LayoutSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('重置窗口大小'),
-        content: Text('确定要将窗口大小重置为默认值吗？'),
+        title: Text(LocalizationService.instance.current.resetWindowSize_4271),
+        content: Text(
+          LocalizationService.instance.current.confirmResetWindowSize_4821,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationService.instance.current.cancel_4821),
           ),
           ElevatedButton(
             onPressed: () {
               provider.updateLayout(windowWidth: 1280.0, windowHeight: 720.0);
               Navigator.of(context).pop();
-              context.showSuccessSnackBar('窗口大小设置已重置为默认值');
+              context.showSuccessSnackBar(
+                LocalizationService
+                    .instance
+                    .current
+                    .windowSizeResetToDefault_4821,
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: Text('重置'),
+            child: Text(LocalizationService.instance.current.resetButton_4521),
           ),
         ],
       ),

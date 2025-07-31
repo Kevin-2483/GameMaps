@@ -1,6 +1,6 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 工作状态操作控件类型

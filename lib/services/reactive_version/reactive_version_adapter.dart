@@ -618,11 +618,7 @@ class ReactiveVersionAdapter {
       return newVersionState;
     } catch (e) {
       _isUpdating = false;
-      debugPrint(
-        LocalizationService.instance.current.versionCreationFailed(
-          e,
-        ),
-      );
+      debugPrint(LocalizationService.instance.current.versionCreationFailed(e));
       rethrow;
     }
   }
@@ -692,7 +688,11 @@ class ReactiveVersionAdapter {
       }
     }
 
-    debugPrint(LocalizationService.instance.current.allVersionsSaved_7281(_versionManager.mapTitle));
+    debugPrint(
+      LocalizationService.instance.current.allVersionsSaved_7281(
+        _versionManager.mapTitle,
+      ),
+    );
   }
 
   /// 删除版本及其数据

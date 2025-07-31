@@ -309,7 +309,9 @@ class CollaborationStateManager {
     _conflicts[conflictId] = conflict;
     _notifyConflictChanged();
 
-    debugPrint('[CollaborationStateManager] 冲突已创建: $conflictId - $description');
+    debugPrint(
+      '[CollaborationStateManager] ${LocalizationService.instance.current.conflictCreated_7425}: \$conflictId - \$description',
+    );
   }
 
   /// 解决冲突

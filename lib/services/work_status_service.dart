@@ -1,7 +1,7 @@
 // This file has been processed by AI for internationalization
 import 'package:flutter/foundation.dart';
 import 'work_status_action.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 工作状态管理服务

@@ -111,7 +111,9 @@ class VfsMapDataMigrator {
       );
       return true;
     } catch (e) {
-      debugPrint(LocalizationService.instance.current.migrationError_7425(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.migrationError_7425(e.toString()),
+      );
       return false;
     }
   }
@@ -137,7 +139,11 @@ class VfsMapDataMigrator {
       }
       debugPrint(LocalizationService.instance.current.vfsCleanupComplete_7281);
     } catch (e) {
-      debugPrint(LocalizationService.instance.current.vfsCleanupFailed_7281(e.toString()));
+      debugPrint(
+        LocalizationService.instance.current.vfsCleanupFailed_7281(
+          e.toString(),
+        ),
+      );
       rethrow;
     }
   }

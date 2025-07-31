@@ -305,7 +305,9 @@ class _TagsManagerState extends State<TagsManager> {
             controller: _textController,
             focusNode: _focusNode,
             decoration: InputDecoration(
-              hintText: widget.hintText ?? '输入标签名称',
+              hintText:
+                  widget.hintText ??
+                  LocalizationService.instance.current.inputLabelHint_4521,
               border: const OutlineInputBorder(),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/timer_data.dart';
 import '../data/map_data_bloc.dart';
 import '../data/map_data_event.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 计时器管理器

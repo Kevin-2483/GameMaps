@@ -208,7 +208,9 @@ class _MapEditorRadialMenuState extends State<MapEditorRadialMenu> {
       final layer = layersToShow[i];
 
       IconData? iconToUse;
-      String labelToUse = layer.name.isNotEmpty ? layer.name : '未命名图层';
+      String labelToUse = layer.name.isNotEmpty
+          ? layer.name
+          : LocalizationService.instance.current.unnamedLayer_4821;
       Color? layerColor;
 
       if (widget.selectedLayerGroup != null &&

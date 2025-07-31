@@ -82,7 +82,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                   children: [
                     // 文件名设置
                     _buildSection(
-                      title: '文件名',
+                      title: LocalizationService.instance.current.fileName_7891,
                       icon: Icons.drive_file_rename_outline,
                       child: TextField(
                         controller: _fileNameController,
@@ -123,7 +123,8 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
                     // 布局设置
                     _buildSection(
-                      title: '页面布局',
+                      title:
+                          LocalizationService.instance.current.pageLayout_7281,
                       icon: Icons.view_module,
                       child: Row(
                         children: [
@@ -165,7 +166,10 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
                     // 纸张设置
                     _buildSection(
-                      title: '纸张设置',
+                      title: LocalizationService
+                          .instance
+                          .current
+                          .paperSettings_4821,
                       icon: Icons.article,
                       child: Column(
                         children: [
@@ -176,7 +180,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                 LocalizationService
                                     .instance
                                     .current
-                                    .paperSize_4821,
+                                    .paperSize_7281,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -186,6 +190,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                     border: OutlineInputBorder(),
                                     isDense: true,
                                   ),
+
                                   items: PdfPaperSize.values.map((size) {
                                     return DropdownMenuItem(
                                       value: size,
@@ -213,7 +218,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                 LocalizationService
                                     .instance
                                     .current
-                                    .pageOrientation_7281,
+                                    .pageOrientation_3632,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -253,7 +258,10 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
                     // 间距设置
                     _buildSection(
-                      title: '间距设置',
+                      title: LocalizationService
+                          .instance
+                          .current
+                          .spacingSettings_4821,
                       icon: Icons.space_bar,
                       child: Column(
                         children: [
@@ -264,7 +272,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                 LocalizationService
                                     .instance
                                     .current
-                                    .marginLabel_4821,
+                                    .marginLabel_7281,
                               ),
                               Expanded(
                                 child: Slider(
@@ -273,6 +281,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                   max: 50.0,
                                   divisions: 8,
                                   label: '${_margin.round()}pt',
+
                                   onChanged: (value) {
                                     setState(() {
                                       _margin = value;
@@ -290,7 +299,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                                 LocalizationService
                                     .instance
                                     .current
-                                    .imageSpacing_7281,
+                                    .imageSpacing_3632,
                               ),
                               Expanded(
                                 child: Slider(
@@ -316,7 +325,10 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
 
                     // 预览信息
                     _buildSection(
-                      title: '导出信息',
+                      title: LocalizationService
+                          .instance
+                          .current
+                          .exportInfoTitle_4728,
                       icon: Icons.info_outline,
                       child: Container(
                         padding: const EdgeInsets.all(12),

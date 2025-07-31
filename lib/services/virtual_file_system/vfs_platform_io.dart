@@ -151,7 +151,9 @@ class VfsPlatformIO {
 
       return tempFile.path;
     } catch (e) {
-      debugPrint('🔗 VfsPlatformIO: 生成临时文件失败 - $e');
+      debugPrint(
+        '🔗 VfsPlatformIO: ${LocalizationService.instance.current.tempFileGenerationFailed_7281} - $e',
+      );
       return null;
     }
   }

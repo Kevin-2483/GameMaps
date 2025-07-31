@@ -1011,8 +1011,8 @@ class _LegendDockBarState extends State<LegendDockBar> {
 
     return Tooltip(
       message: isSelected
-          ? '$legendPath\n当前选中: ${currentIndex + 1}/$count'
-          : '$legendPath\n点击选择图例项',
+          ? '$legendPath\n${LocalizationService.instance.current.selectedLegendItem_7421(count, currentIndex + 1)}'
+          : '$legendPath\n${LocalizationService.instance.current.clickToSelectLegend_5832}',
       waitDuration: const Duration(milliseconds: 500),
       child: GestureDetector(
         onTap: () => _handleLegendItemClick(legendPath),

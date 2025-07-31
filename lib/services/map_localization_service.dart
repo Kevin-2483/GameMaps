@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/map_localization.dart';
 import 'database_path_service.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 /// 地图本地化服务

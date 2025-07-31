@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_preferences_provider.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 /// 色彩滤镜类型

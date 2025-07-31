@@ -12,7 +12,7 @@
     "max_concurrent": 3,
     "retry_attempts": 3,
     "retry_delay": 2.0,
-    "timeout": 30,
+    "timeout": 120,
     "validate_line_count": true
   },
   "output_settings": {

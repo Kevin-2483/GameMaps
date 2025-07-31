@@ -1,0 +1,17 @@
+{
+  "penTool_1234": "钢笔",
+  "brushTool_5678": "画笔",
+  "lineTool_9012": "直线",
+  "dashedLineTool_3456": "虚线",
+  "arrowTool_7890": "箭头",
+  "solidRectangleTool_1235": "实心矩形",
+  "hollowRectangleTool_5679": "空心矩形",
+  "diagonalLinesTool_9023": "单斜线",
+  "crossLinesTool_3467": "交叉线",
+  "dotGridTool_7901": "点阵",
+  "pixelPenTool_1245": "像素笔",
+  "circleTool_5689": "圆形",
+  "textTool_9034": "文本",
+  "eraserTool_3478": "橡皮擦",
+  "imageSelectionTool_7912": "图片选区"
+}

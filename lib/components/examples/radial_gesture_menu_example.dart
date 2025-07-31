@@ -56,7 +56,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'brush_large',
-            label: '大画笔',
+            label: LocalizationService.instance.current.largeBrush_4821,
             icon: Icons.brush,
             color: Colors.red.shade700,
             onTap: () => _onItemSelected(
@@ -65,7 +65,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'eraser',
-            label: '橡皮擦',
+            label: LocalizationService.instance.current.eraserTool_4821,
             icon: Icons.auto_fix_high,
             color: Colors.grey,
             onTap: () => _onItemSelected(
@@ -87,7 +87,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
         subItems: [
           RadialMenuItem(
             id: 'layer_new',
-            label: '新建图层',
+            label: LocalizationService.instance.current.createNewLayer_4821,
             icon: Icons.add,
             color: Colors.blue.shade300,
             onTap: () => _onItemSelected(
@@ -96,7 +96,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'layer_duplicate',
-            label: '复制图层',
+            label: LocalizationService.instance.current.duplicateLayer_4821,
             icon: Icons.copy,
             color: Colors.blue.shade500,
             onTap: () => _onItemSelected(
@@ -114,7 +114,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'layer_merge',
-            label: '合并图层',
+            label: LocalizationService.instance.current.mergeLayers_7281,
             icon: Icons.merge,
             color: Colors.blue.shade900,
             onTap: () => _onItemSelected(
@@ -129,7 +129,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
       // 图层组 (右侧)
       RadialMenuItem(
         id: 'layer_group',
-        label: '图层组',
+        label: LocalizationService.instance.current.layerGroup_7281,
         icon: Icons.folder,
         color: Colors.green,
         subItems: [
@@ -193,7 +193,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'note_voice',
-            label: '语音便签',
+            label: LocalizationService.instance.current.voiceNoteLabel_7281,
             icon: Icons.mic,
             color: Colors.orange.shade700,
             onTap: () => _onItemSelected(
@@ -202,7 +202,7 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
           ),
           RadialMenuItem(
             id: 'note_delete',
-            label: '删除便签',
+            label: LocalizationService.instance.current.deleteNoteLabel_4821,
             icon: Icons.delete_outline,
             color: Colors.orange.shade900,
             onTap: () => _onItemSelected(
@@ -350,13 +350,12 @@ class _RadialGestureMenuExampleState extends State<RadialGestureMenuExample> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '1. 按住中键或触摸板双指按下调起菜单\n'
-                      '2. 拖动到菜单项上会自动进入子菜单\n'
-                      '3. 拖回中心区域返回主菜单\n'
-                      '4. 松开鼠标/手指执行选择的动作\n'
-                      '5. 开启调试模式可以看到连线和角度信息',
-                      style: TextStyle(fontSize: 14, height: 1.4),
+                    Text(
+                      LocalizationService
+                          .instance
+                          .current
+                          .radialMenuInstructions_7281,
+                      style: const TextStyle(fontSize: 14, height: 1.4),
                     ),
                   ],
                 ),

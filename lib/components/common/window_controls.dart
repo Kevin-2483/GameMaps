@@ -158,7 +158,9 @@ class _WindowControlsState extends State<WindowControls>
               );
             }
           },
-          tooltip: _isFullScreen ? '退出全屏' : '全屏',
+          tooltip: _isFullScreen
+              ? LocalizationService.instance.current.exitFullscreen_4821
+              : LocalizationService.instance.current.enterFullscreen_4821,
         ),
       ],
     ];

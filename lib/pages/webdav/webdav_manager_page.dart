@@ -849,11 +849,17 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '请输入服务器 URL';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .serverUrlRequired_4821;
                   }
                   final uri = Uri.tryParse(value.trim());
                   if (uri == null || !uri.hasAbsolutePath) {
-                    return '请输入有效的 URL';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .invalidUrlPrompt_7281;
                   }
                   return null;
                 },
@@ -861,38 +867,56 @@ class _ConfigDialogState extends State<_ConfigDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _storagePathController,
-                decoration: const InputDecoration(
-                  labelText: '存储文件夹',
+                decoration: InputDecoration(
+                  labelText: LocalizationService
+                      .instance
+                      .current
+                      .storageFolderLabel_4821,
                   hintText: '/r6box',
                   helperText:
-                      '只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)，不能包含中文字符，长度不超过100字符',
+                      LocalizationService.instance.current.folderNameRules_4821,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '请输入存储文件夹路径';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .inputFolderPath_4821;
                   }
 
                   final trimmedValue = value.trim();
 
                   // 检查长度限制
                   if (trimmedValue.length > 100) {
-                    return '存储路径长度不能超过100个字符';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .storagePathLengthExceeded_4821;
                   }
 
                   // 检查是否包含中文字符
                   if (_containsChinese(trimmedValue)) {
-                    return '存储路径不能包含中文字符';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .pathNoChineseChars_4821;
                   }
 
                   // 检查是否包含特殊字符（只允许字母、数字、斜杠、下划线、连字符）
                   if (!_isValidPathCharacters(trimmedValue)) {
-                    return '存储路径只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .invalidPathCharactersError_4821;
                   }
 
                   // 验证路径格式
                   final normalizedPath = _normalizeStoragePath(trimmedValue);
                   if (normalizedPath.isEmpty) {
-                    return '无效的路径格式';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .invalidPathFormat_4821;
                   }
 
                   return null;
@@ -910,7 +934,12 @@ class _ConfigDialogState extends State<_ConfigDialog> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedAuthAccountId,
-                decoration: const InputDecoration(labelText: '认证账户'),
+                decoration: InputDecoration(
+                  labelText: LocalizationService
+                      .instance
+                      .current
+                      .authenticationAccount_7281,
+                ),
                 items: widget.authAccounts.map((account) {
                   return DropdownMenuItem(
                     value: account.authAccountId,
@@ -924,14 +953,19 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                 },
                 validator: (value) {
                   if (value == null) {
-                    return '请选择认证账户';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .selectAuthAccount_4821;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               SwitchListTile(
-                title: const Text('启用配置'),
+                title: Text(
+                  LocalizationService.instance.current.enableConfiguration_4271,
+                ),
                 value: _isEnabled,
                 onChanged: (value) {
                   setState(() {
@@ -946,7 +980,7 @@ class _ConfigDialogState extends State<_ConfigDialog> {
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         ElevatedButton(
           onPressed: _isSaving ? null : _saveConfig,
@@ -956,7 +990,11 @@ class _ConfigDialogState extends State<_ConfigDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(isEditing ? '保存' : '添加'),
+              : Text(
+                  isEditing
+                      ? LocalizationService.instance.current.saveButton_5421
+                      : LocalizationService.instance.current.addButton_5421,
+                ),
         ),
       ],
     );
@@ -1030,9 +1068,15 @@ class _ConfigDialogState extends State<_ConfigDialog> {
 
       widget.onSaved();
       Navigator.of(context).pop();
-      context.showSuccessSnackBar(widget.config != null ? '配置已更新' : '配置已添加');
+      context.showSuccessSnackBar(
+        widget.config != null
+            ? LocalizationService.instance.current.configUpdated_42
+            : LocalizationService.instance.current.configAdded_17,
+      );
     } catch (e) {
-      context.showErrorSnackBar('操作失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.operationFailedWithError(e),
+      );
     } finally {
       setState(() {
         _isSaving = false;
@@ -1085,7 +1129,11 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
     final isEditing = widget.account != null;
 
     return AlertDialog(
-      title: Text(isEditing ? '编辑认证账户' : '添加认证账户'),
+      title: Text(
+        isEditing
+            ? LocalizationService.instance.current.editAuthAccount_5421
+            : LocalizationService.instance.current.addAuthAccount_8753,
+      ),
       content: SizedBox(
         width: 400,
         child: Form(
@@ -1095,13 +1143,20 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
             children: [
               TextFormField(
                 controller: _displayNameController,
-                decoration: const InputDecoration(
-                  labelText: '显示名称',
-                  hintText: '例如：我的账户',
+                decoration: InputDecoration(
+                  labelText: LocalizationService
+                      .instance
+                      .current
+                      .displayNameLabel_4821,
+                  hintText:
+                      LocalizationService.instance.current.accountNameHint_7532,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '请输入显示名称';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .inputDisplayName_4821;
                   }
                   return null;
                 },
@@ -1109,10 +1164,16 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(labelText: '用户名'),
+                decoration: InputDecoration(
+                  labelText:
+                      LocalizationService.instance.current.usernameLabel_4521,
+                ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '请输入用户名';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .usernameRequired_4821;
                   }
                   return null;
                 },
@@ -1121,7 +1182,12 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: isEditing ? '密码（留空保持不变）' : '密码',
+                  labelText: isEditing
+                      ? LocalizationService
+                            .instance
+                            .current
+                            .passwordKeepEmpty_1234
+                      : LocalizationService.instance.current.password_5678,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -1138,7 +1204,10 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
                 obscureText: _obscurePassword,
                 validator: (value) {
                   if (!isEditing && (value == null || value.trim().isEmpty)) {
-                    return '请输入密码';
+                    return LocalizationService
+                        .instance
+                        .current
+                        .enterPassword_4821;
                   }
                   return null;
                 },
@@ -1150,7 +1219,7 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(LocalizationService.instance.current.cancel_4821),
         ),
         ElevatedButton(
           onPressed: _isSaving ? null : _saveAccount,
@@ -1160,7 +1229,11 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(isEditing ? '保存' : '添加'),
+              : Text(
+                  isEditing
+                      ? LocalizationService.instance.current.saveButton_5421
+                      : LocalizationService.instance.current.addButton_5421,
+                ),
         ),
       ],
     );
@@ -1208,9 +1281,15 @@ class _AuthAccountDialogState extends State<_AuthAccountDialog> {
       widget.onSaved();
       Navigator.of(context).pop();
 
-      context.showSuccessSnackBar(widget.account != null ? '账户已更新' : '账户已添加');
+      context.showSuccessSnackBar(
+        widget.account != null
+            ? LocalizationService.instance.current.accountUpdated_5421
+            : LocalizationService.instance.current.accountAdded_5421,
+      );
     } catch (e) {
-      context.showErrorSnackBar('操作失败: $e');
+      context.showErrorSnackBar(
+        LocalizationService.instance.current.operationFailedWithError(e),
+      );
     } finally {
       setState(() {
         _isSaving = false;

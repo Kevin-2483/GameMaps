@@ -8,7 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../models/map_item.dart';
 import '../models/map_item_summary.dart';
 import 'database_path_service.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 地图数据库服务
@@ -179,7 +179,11 @@ class MapDatabaseService {
             .current
             .mapDatabaseServiceUpdateMapStart_7281,
       );
-      debugPrint(LocalizationService.instance.current.mapIdDebug(map.id?.toString() ?? 'null'));
+      debugPrint(
+        LocalizationService.instance.current.mapIdDebug(
+          map.id?.toString() ?? 'null',
+        ),
+      );
       debugPrint(
         '- ${LocalizationService.instance.current.mapTitle_7421}: ${map.title}',
       );
@@ -256,7 +260,9 @@ class MapDatabaseService {
 
       if (updateResult == 0) {
         throw Exception(
-          LocalizationService.instance.current.mapRecordNotFoundWithId(map.id?.toString() ?? 'null'),
+          LocalizationService.instance.current.mapRecordNotFoundWithId(
+            map.id?.toString() ?? 'null',
+          ),
         );
       }
     } catch (e, stackTrace) {

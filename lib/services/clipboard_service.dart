@@ -290,7 +290,9 @@ class ClipboardService {
     bool isWeb = false,
   }) async {
     try {
-      final platformHint = isWeb ? 'Web平台' : '此平台';
+      final platformHint = isWeb
+          ? LocalizationService.instance.current.webPlatform_1234
+          : LocalizationService.instance.current.currentPlatform_5678;
       await Clipboard.setData(
         ClipboardData(
           text: LocalizationService.instance.current.mapSelectionSavedWithSize(
@@ -306,8 +308,8 @@ class ClipboardService {
           width,
           height,
           isWeb
-              ? LocalizationService.instance.current.web_1234
-              : LocalizationService.instance.current.native_5678,
+              ? LocalizationService.instance.current.webCopyHint_9012
+              : LocalizationService.instance.current.nativeCopyHint_3456,
         ),
       );
       return true;

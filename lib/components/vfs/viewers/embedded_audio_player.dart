@@ -566,7 +566,8 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
                   });
             }
           },
-          tooltip: '快进10秒',
+          tooltip:
+              LocalizationService.instance.current.fastForward10Seconds_7281,
         ),
       ],
     );
@@ -605,7 +606,7 @@ class _EmbeddedAudioPlayerState extends State<EmbeddedAudioPlayer>
         size: 20,
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
       ),
-      tooltip: '音量控制',
+      tooltip: LocalizationService.instance.current.volumeControl_4821,
       itemBuilder: (context) => [
         PopupMenuItem(
           enabled: false,

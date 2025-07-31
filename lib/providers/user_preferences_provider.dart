@@ -8,7 +8,6 @@ import '../services/user_preferences/user_preferences_service.dart';
 import '../services/user_preferences/user_preferences_config_service.dart';
 import '../utils/extension_settings_helper.dart';
 import 'theme_provider.dart';
-import '../l10n/app_localizations.dart';
 import '../services/localization_service.dart';
 
 /// 用户偏好设置状态管理Provider
@@ -54,7 +53,9 @@ class UserPreferencesProvider extends ChangeNotifier {
   String get locale => _currentPreferences?.locale ?? 'zh_CN';
 
   /// 用户显示名称
-  String get displayName => _currentPreferences?.displayName ?? '用户';
+  String get displayName =>
+      _currentPreferences?.displayName ??
+      LocalizationService.instance.current.user_4821;
 
   /// 用户头像路径
   String? get avatarPath => _currentPreferences?.avatarPath;

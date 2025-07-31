@@ -179,7 +179,13 @@ class ReactiveVersionManager extends ChangeNotifier {
       _currentVersionId = versionId;
     }
 
-debugPrint(LocalizationService.instance.current.initVersionSession(mapTitle, versionId, versionName ?? versionId));
+    debugPrint(
+      LocalizationService.instance.current.initVersionSession(
+        mapTitle,
+        versionId,
+        versionName ?? versionId,
+      ),
+    );
     notifyListeners();
     return state;
   }
@@ -192,7 +198,9 @@ debugPrint(LocalizationService.instance.current.initVersionSession(mapTitle, ver
     Map<String, dynamic>? metadata,
   }) {
     if (_versionStates.containsKey(versionId)) {
-throw ArgumentError(LocalizationService.instance.current.versionExists_7285(versionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.versionExists_7285(versionId),
+      );
     }
     MapItem? initialData;
 
@@ -200,8 +208,15 @@ throw ArgumentError(LocalizationService.instance.current.versionExists_7285(vers
     if (sourceVersionId != null &&
         _versionStates.containsKey(sourceVersionId)) {
       initialData = _versionStates[sourceVersionId]?.sessionData;
-debugPrint(
-        LocalizationService.instance.current.copyDataFromVersion(sourceVersionId, initialData != null ? LocalizationService.instance.current.dataWithLayers_5729(initialData.layers.length) : LocalizationService.instance.current.noData_6943),
+      debugPrint(
+        LocalizationService.instance.current.copyDataFromVersion(
+          sourceVersionId,
+          initialData != null
+              ? LocalizationService.instance.current.dataWithLayers_5729(
+                  initialData.layers.length,
+                )
+              : LocalizationService.instance.current.noData_6943,
+        ),
       );
     }
 
@@ -216,7 +231,12 @@ debugPrint(
       }
 
       _versionPathSelections[versionId] = newVersionPathSelections;
-debugPrint(LocalizationService.instance.current.copyPathSelectionStatus(sourceVersionId, versionId));
+      debugPrint(
+        LocalizationService.instance.current.copyPathSelectionStatus(
+          sourceVersionId,
+          versionId,
+        ),
+      );
     } else {
       // 创建空的路径选择状态
       _versionPathSelections[versionId] = <String, Set<String>>{};
@@ -229,9 +249,17 @@ debugPrint(LocalizationService.instance.current.copyPathSelectionStatus(sourceVe
       metadata: metadata,
     );
 
-debugPrint(
-      LocalizationService.instance.current.createVersionSession_4821(mapTitle, versionId, versionName) +
-          (sourceVersionId != null ? LocalizationService.instance.current.copiedFrom_5729(sourceVersionId) : ''),
+    debugPrint(
+      LocalizationService.instance.current.createVersionSession_4821(
+            mapTitle,
+            versionId,
+            versionName,
+          ) +
+          (sourceVersionId != null
+              ? LocalizationService.instance.current.copiedFrom_5729(
+                  sourceVersionId,
+                )
+              : ''),
     );
 
     return state;
@@ -240,11 +268,17 @@ debugPrint(
   /// 删除版本（仅从内存中删除会话状态）
   void deleteVersion(String versionId) {
     if (versionId == 'default') {
-throw ArgumentError(LocalizationService.instance.current.cannotDeleteDefaultVersion_4271);
+      throw ArgumentError(
+        LocalizationService.instance.current.cannotDeleteDefaultVersion_4271,
+      );
     }
 
     if (!_versionStates.containsKey(versionId)) {
-debugPrint(LocalizationService.instance.current.versionNotExistNeedDelete(versionId));
+      debugPrint(
+        LocalizationService.instance.current.versionNotExistNeedDelete(
+          versionId,
+        ),
+      );
       return;
     }
 
@@ -264,20 +298,35 @@ debugPrint(LocalizationService.instance.current.versionNotExistNeedDelete(versio
       _activeEditingVersionId = null;
     }
 
-debugPrint(LocalizationService.instance.current.deleteVersionSession(mapTitle, versionId));
+    debugPrint(
+      LocalizationService.instance.current.deleteVersionSession(
+        mapTitle,
+        versionId,
+      ),
+    );
     notifyListeners();
   }
 
   /// 切换到指定版本
   void switchToVersion(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_4821(versionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.versionNotFoundError_4821(
+          versionId,
+        ),
+      );
     }
 
     final previousVersionId = _currentVersionId;
     _currentVersionId = versionId;
 
-debugPrint(LocalizationService.instance.current.versionSwitchLog_7421(mapTitle, previousVersionId ?? 'null', versionId));
+    debugPrint(
+      LocalizationService.instance.current.versionSwitchLog_7421(
+        mapTitle,
+        previousVersionId ?? 'null',
+        versionId,
+      ),
+    );
     notifyListeners();
   }
 
@@ -292,7 +341,12 @@ debugPrint(LocalizationService.instance.current.versionSwitchLog_7421(mapTitle, 
     Function(String legendGroupId, String path)? onPathAdded,
     Function(String legendGroupId, String path)? onPathRemoved,
   }) {
-debugPrint(LocalizationService.instance.current.compareVersionPathDiff_4827(fromVersionId, toVersionId));
+    debugPrint(
+      LocalizationService.instance.current.compareVersionPathDiff_4827(
+        fromVersionId,
+        toVersionId,
+      ),
+    );
 
     // 确保两个版本的路径选择数据存在
     _ensureVersionPathSelectionExists(fromVersionId);
@@ -303,7 +357,7 @@ debugPrint(LocalizationService.instance.current.compareVersionPathDiff_4827(from
 
     // 验证路径数据
     if (fromPaths.isEmpty && toPaths.isEmpty) {
-debugPrint(LocalizationService.instance.current.versionWarning_4821);
+      debugPrint(LocalizationService.instance.current.versionWarning_4821);
       return;
     }
 
@@ -333,19 +387,30 @@ debugPrint(LocalizationService.instance.current.versionWarning_4821);
       }
     }
 
-debugPrint(LocalizationService.instance.current.pathDiffAnalysisComplete_7281);
-debugPrint(
-      LocalizationService.instance.current.addedPathsCount(addedPaths.values.fold(0, (sum, set) => (sum as int) + set.length)),
+    debugPrint(
+      LocalizationService.instance.current.pathDiffAnalysisComplete_7281,
     );
-debugPrint(
-      LocalizationService.instance.current.removedPathsCount_7421(removedPaths.values.fold(0, (sum, set) => (sum as int) + set.length)),
+    debugPrint(
+      LocalizationService.instance.current.addedPathsCount(
+        addedPaths.values.fold(0, (sum, set) => (sum as int) + set.length),
+      ),
+    );
+    debugPrint(
+      LocalizationService.instance.current.removedPathsCount_7421(
+        removedPaths.values.fold(0, (sum, set) => (sum as int) + set.length),
+      ),
     );
 
     // 处理新增的路径（加载到缓存）
     for (final entry in addedPaths.entries) {
       final legendGroupId = entry.key;
       for (final path in entry.value) {
-debugPrint(LocalizationService.instance.current.loadingPathToCache(legendGroupId, path));
+        debugPrint(
+          LocalizationService.instance.current.loadingPathToCache(
+            legendGroupId,
+            path,
+          ),
+        );
         onPathAdded?.call(legendGroupId, path);
         _loadPathToCache(path);
       }
@@ -358,11 +423,16 @@ debugPrint(LocalizationService.instance.current.loadingPathToCache(legendGroupId
         // 检查该路径是否还被目标版本的其他图例组使用
         final stillUsed = toPaths.values.any((paths) => paths.contains(path));
         if (!stillUsed) {
-debugPrint(LocalizationService.instance.current.cacheCleanPath(legendGroupId, path));
+          debugPrint(
+            LocalizationService.instance.current.cacheCleanPath(
+              legendGroupId,
+              path,
+            ),
+          );
           onPathRemoved?.call(legendGroupId, path);
           _clearPathFromCache(path);
         } else {
-debugPrint(LocalizationService.instance.current.pathStillInUse(path));
+          debugPrint(LocalizationService.instance.current.pathStillInUse(path));
         }
       }
     }
@@ -385,7 +455,9 @@ debugPrint(LocalizationService.instance.current.pathStillInUse(path));
   /// 将路径加载到缓存
   Future<void> _loadPathToCache(String path) async {
     try {
-debugPrint(LocalizationService.instance.current.loadingPathToCache_7281(path));
+      debugPrint(
+        LocalizationService.instance.current.loadingPathToCache_7281(path),
+      );
 
       final cacheManager = LegendCacheManager();
       final legendService = LegendVfsService();
@@ -393,7 +465,12 @@ debugPrint(LocalizationService.instance.current.loadingPathToCache_7281(path));
       // 获取目录下的所有图例文件
       final legendFiles = await legendService.getLegendsInFolder(path);
 
-debugPrint(LocalizationService.instance.current.legendFilesFound_7281(path, legendFiles.length));
+      debugPrint(
+        LocalizationService.instance.current.legendFilesFound_7281(
+          path,
+          legendFiles.length,
+        ),
+      );
 
       // 逐个加载图例到缓存
       for (final legendFile in legendFiles) {
@@ -402,15 +479,26 @@ debugPrint(LocalizationService.instance.current.legendFilesFound_7281(path, lege
 
           // 使用缓存管理器的异步加载方法
           await cacheManager.getLegendData(legendPath);
-debugPrint(LocalizationService.instance.current.loadedToCache_7281(legendPath));
+          debugPrint(
+            LocalizationService.instance.current.loadedToCache_7281(legendPath),
+          );
         } catch (e) {
-debugPrint(LocalizationService.instance.current.legendLoadFailed_7281(legendFile, e));
+          debugPrint(
+            LocalizationService.instance.current.legendLoadFailed_7281(
+              legendFile,
+              e,
+            ),
+          );
         }
       }
 
-debugPrint(LocalizationService.instance.current.pathLoadedComplete_728(path));
+      debugPrint(
+        LocalizationService.instance.current.pathLoadedComplete_728(path),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.loadPathToCacheFailed(path, e));
+      debugPrint(
+        LocalizationService.instance.current.loadPathToCacheFailed(path, e),
+      );
     }
   }
 
@@ -421,76 +509,141 @@ debugPrint(LocalizationService.instance.current.loadPathToCacheFailed(path, e));
 
       // 使用已有的步进型清理方法
       cacheManager.clearCacheByFolderStepwise(path);
-debugPrint(LocalizationService.instance.current.cacheCleanedPath_7281(path));
+      debugPrint(
+        LocalizationService.instance.current.cacheCleanedPath_7281(path),
+      );
     } catch (e) {
-debugPrint(LocalizationService.instance.current.cacheCleanFailed(path, e));
+      debugPrint(
+        LocalizationService.instance.current.cacheCleanFailed(path, e),
+      );
     }
   }
 
   /// 智能版本切换（包含缓存管理）
   void switchToVersionWithCacheManagement(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_7284(versionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.versionNotFoundError_7284(
+          versionId,
+        ),
+      );
     }
 
     final previousVersionId = _currentVersionId;
-debugPrint(LocalizationService.instance.current.versionSwitchStart(previousVersionId ?? 'null', versionId));
+    debugPrint(
+      LocalizationService.instance.current.versionSwitchStart(
+        previousVersionId ?? 'null',
+        versionId,
+      ),
+    );
 
     // 如果有之前的版本，比较路径差异并更新缓存
     if (previousVersionId != null && previousVersionId != versionId) {
-debugPrint(LocalizationService.instance.current.compareVersionPathDiff(previousVersionId, versionId));
+      debugPrint(
+        LocalizationService.instance.current.compareVersionPathDiff(
+          previousVersionId,
+          versionId,
+        ),
+      );
 
       // 输出当前版本的路径选择状态
       final fromPaths = _getVersionAllPaths(previousVersionId);
       final toPaths = _getVersionAllPaths(versionId);
 
-debugPrint(LocalizationService.instance.current.sourceVersionPathSelection_7281(previousVersionId));
+      debugPrint(
+        LocalizationService.instance.current.sourceVersionPathSelection_7281(
+          previousVersionId,
+        ),
+      );
       for (final entry in fromPaths.entries) {
-debugPrint('  ${LocalizationService.instance.current.legendGroup_7421} ${entry.key}: ${entry.value.join(", ")}');
+        debugPrint(
+          '  ${LocalizationService.instance.current.legendGroup_7421} ${entry.key}: ${entry.value.join(", ")}',
+        );
       }
 
-debugPrint(LocalizationService.instance.current.versionPathSelection_7281(versionId));
+      debugPrint(
+        LocalizationService.instance.current.versionPathSelection_7281(
+          versionId,
+        ),
+      );
       for (final entry in toPaths.entries) {
-debugPrint(LocalizationService.instance.current.legendGroup_7421(entry.key, entry.value.join(", ")));
+        debugPrint(
+          LocalizationService.instance.current.legendGroup_7421(
+            entry.key,
+            entry.value.join(", "),
+          ),
+        );
       }
 
       compareVersionPathsAndUpdateCache(
         previousVersionId,
         versionId,
         onPathAdded: (legendGroupId, path) {
-debugPrint(LocalizationService.instance.current.versionSwitchPath_4821(legendGroupId, path));
+          debugPrint(
+            LocalizationService.instance.current.versionSwitchPath_4821(
+              legendGroupId,
+              path,
+            ),
+          );
         },
         onPathRemoved: (legendGroupId, path) {
-debugPrint(LocalizationService.instance.current.versionSwitchCleanPath(legendGroupId, path));
+          debugPrint(
+            LocalizationService.instance.current.versionSwitchCleanPath(
+              legendGroupId,
+              path,
+            ),
+          );
         },
       );
     } else {
-debugPrint(
-        LocalizationService.instance.current.noNeedComparePathDiff(previousVersionId ?? 'null', versionId),
+      debugPrint(
+        LocalizationService.instance.current.noNeedComparePathDiff(
+          previousVersionId ?? 'null',
+          versionId,
+        ),
       );
     }
 
     // 执行版本切换
     switchToVersion(versionId);
 
-debugPrint(LocalizationService.instance.current.versionSwitchComplete(previousVersionId ?? 'null', versionId));
+    debugPrint(
+      LocalizationService.instance.current.versionSwitchComplete(
+        previousVersionId ?? 'null',
+        versionId,
+      ),
+    );
   }
 
   /// 开始编辑指定版本
   void startEditingVersion(String versionId) {
     if (!_versionStates.containsKey(versionId)) {
-throw ArgumentError(LocalizationService.instance.current.versionNotFoundError_4821(versionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.versionNotFoundError_4821(
+          versionId,
+        ),
+      );
     }
 
     _activeEditingVersionId = versionId;
-debugPrint(LocalizationService.instance.current.startEditingVersion(mapTitle, versionId));
+    debugPrint(
+      LocalizationService.instance.current.startEditingVersion(
+        mapTitle,
+        versionId,
+      ),
+    );
     notifyListeners();
   }
 
   /// 停止编辑当前版本
   void stopEditingVersion() {
     if (_activeEditingVersionId != null) {
-debugPrint(LocalizationService.instance.current.stopEditingVersion(mapTitle, _activeEditingVersionId ?? 'null'));
+      debugPrint(
+        LocalizationService.instance.current.stopEditingVersion(
+          mapTitle,
+          _activeEditingVersionId ?? 'null',
+        ),
+      );
       _activeEditingVersionId = null;
       notifyListeners();
     }
@@ -504,7 +657,11 @@ debugPrint(LocalizationService.instance.current.stopEditingVersion(mapTitle, _ac
   }) {
     final currentState = _versionStates[versionId];
     if (currentState == null) {
-debugPrint(LocalizationService.instance.current.versionNotFoundCannotUpdate(versionId));
+      debugPrint(
+        LocalizationService.instance.current.versionNotFoundCannotUpdate(
+          versionId,
+        ),
+      );
       return;
     }
 
@@ -515,8 +672,15 @@ debugPrint(LocalizationService.instance.current.versionNotFoundCannotUpdate(vers
     );
     _versionDataCache[versionId] = newData;
 
-debugPrint(
-      LocalizationService.instance.current.updateVersionSessionData_4821(mapTitle, versionId, markAsChanged ? LocalizationService.instance.current.modified_5732 : LocalizationService.instance.current.notModified_6843, newData.layers.length),
+    debugPrint(
+      LocalizationService.instance.current.updateVersionSessionData_4821(
+        mapTitle,
+        versionId,
+        markAsChanged
+            ? LocalizationService.instance.current.modified_5732
+            : LocalizationService.instance.current.notModified_6843,
+        newData.layers.length,
+      ),
     );
     notifyListeners();
   }
@@ -530,7 +694,11 @@ debugPrint(
     final currentState = _versionStates[versionId];
     final sessionData = currentState?.sessionData;
     if (sessionData == null) {
-debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(versionId));
+      debugPrint(
+        LocalizationService.instance.current.versionOrSessionNotFound(
+          versionId,
+        ),
+      );
       return;
     }
 
@@ -551,7 +719,11 @@ debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(version
     final currentState = _versionStates[versionId];
     final sessionData = currentState?.sessionData;
     if (sessionData == null) {
-debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(versionId));
+      debugPrint(
+        LocalizationService.instance.current.versionOrSessionNotFound(
+          versionId,
+        ),
+      );
       return;
     }
 
@@ -572,7 +744,12 @@ debugPrint(LocalizationService.instance.current.versionOrSessionNotFound(version
         lastModified: DateTime.now(),
       );
 
-debugPrint(LocalizationService.instance.current.versionSavedLog('$mapTitle', '$versionId'));
+      debugPrint(
+        LocalizationService.instance.current.versionSavedLog(
+          '$mapTitle',
+          '$versionId',
+        ),
+      );
       notifyListeners();
     }
   }
@@ -592,7 +769,9 @@ debugPrint(LocalizationService.instance.current.versionSavedLog('$mapTitle', '$v
     }
 
     if (hasChanges) {
-debugPrint(LocalizationService.instance.current.allVersionsSaved_7281(mapTitle));
+      debugPrint(
+        LocalizationService.instance.current.allVersionsSaved_7281(mapTitle),
+      );
       notifyListeners();
     }
   }
@@ -606,7 +785,13 @@ debugPrint(LocalizationService.instance.current.allVersionsSaved_7281(mapTitle))
         lastModified: DateTime.now(),
       );
 
-debugPrint(LocalizationService.instance.current.updateVersionName(mapTitle, versionId, newName));
+      debugPrint(
+        LocalizationService.instance.current.updateVersionName(
+          mapTitle,
+          versionId,
+          newName,
+        ),
+      );
       notifyListeners();
     }
   }
@@ -620,7 +805,12 @@ debugPrint(LocalizationService.instance.current.updateVersionName(mapTitle, vers
         lastModified: DateTime.now(),
       );
 
-debugPrint(LocalizationService.instance.current.updateVersionMetadata_7421(mapTitle, versionId));
+      debugPrint(
+        LocalizationService.instance.current.updateVersionMetadata_7421(
+          mapTitle,
+          versionId,
+        ),
+      );
       notifyListeners();
     }
   }
@@ -633,16 +823,27 @@ debugPrint(LocalizationService.instance.current.updateVersionMetadata_7421(mapTi
   }) {
     final sourceState = _versionStates[sourceVersionId];
     if (sourceState == null) {
-throw ArgumentError(LocalizationService.instance.current.sourceVersionNotFound_4821(sourceVersionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.sourceVersionNotFound_4821(
+          sourceVersionId,
+        ),
+      );
     }
 
     if (_versionStates.containsKey(newVersionId)) {
-throw ArgumentError(LocalizationService.instance.current.targetVersionExists_4821(newVersionId));
+      throw ArgumentError(
+        LocalizationService.instance.current.targetVersionExists_4821(
+          newVersionId,
+        ),
+      );
     }
 
-final newState = ReactiveVersionState(
+    final newState = ReactiveVersionState(
       versionId: newVersionId,
-      versionName: newVersionName ?? '${sourceState.versionName} ' + LocalizationService.instance.current.copySuffix_4821,
+      versionName:
+          newVersionName ??
+          '${sourceState.versionName} ' +
+              LocalizationService.instance.current.copySuffix_4821,
       sessionData: sourceState.sessionData,
       hasUnsavedChanges: true, // 副本标记为已修改，需要保存
       createdAt: DateTime.now(),
@@ -656,22 +857,37 @@ final newState = ReactiveVersionState(
       _versionDataCache[newVersionId] = sourceSessionData;
     }
 
-debugPrint(LocalizationService.instance.current.copyVersionSession(mapTitle, sourceVersionId, newVersionId));
+    debugPrint(
+      LocalizationService.instance.current.copyVersionSession(
+        mapTitle,
+        sourceVersionId,
+        newVersionId,
+      ),
+    );
     notifyListeners();
     return newState;
   }
 
   /// 获取版本会话摘要信息
-String getSessionSummary() {
+  String getSessionSummary() {
     final totalVersions = _versionStates.length;
     final unsavedCount = _versionStates.values
         .where((state) => state.hasUnsavedChanges)
         .length;
     final editingInfo = _activeEditingVersionId != null
-        ? ', ' + LocalizationService.instance.current.editingVersion_7421(_activeEditingVersionId!)
+        ? ', ' +
+              LocalizationService.instance.current.editingVersion_7421(
+                _activeEditingVersionId!,
+              )
         : '';
 
-    return LocalizationService.instance.current.mapSessionSummary_1589(mapTitle, totalVersions, unsavedCount, _currentVersionId ?? 'null') + editingInfo;
+    return LocalizationService.instance.current.mapSessionSummary_1589(
+          mapTitle,
+          totalVersions,
+          unsavedCount,
+          _currentVersionId ?? 'null',
+        ) +
+        editingInfo;
   }
 
   /// 清理所有会话状态
@@ -682,7 +898,9 @@ String getSessionSummary() {
     _currentVersionId = null;
     _activeEditingVersionId = null;
 
-debugPrint(LocalizationService.instance.current.clearSessionState_7421(mapTitle));
+    debugPrint(
+      LocalizationService.instance.current.clearSessionState_7421(mapTitle),
+    );
     notifyListeners();
   }
 
@@ -693,7 +911,12 @@ debugPrint(LocalizationService.instance.current.clearSessionState_7421(mapTitle)
       _versionStates[versionId] = currentState.copyWith(clearSessionData: true);
       _versionDataCache.remove(versionId);
 
-debugPrint(LocalizationService.instance.current.cleanVersionSessionData(mapTitle, versionId));
+      debugPrint(
+        LocalizationService.instance.current.cleanVersionSessionData(
+          mapTitle,
+          versionId,
+        ),
+      );
       notifyListeners();
     }
   }
@@ -705,14 +928,22 @@ debugPrint(LocalizationService.instance.current.cleanVersionSessionData(mapTitle
     // 检查当前版本是否存在
     if (_currentVersionId != null &&
         !_versionStates.containsKey(_currentVersionId)) {
-debugPrint(LocalizationService.instance.current.invalidVersionIdWarning(_currentVersionId ?? 'null'));
+      debugPrint(
+        LocalizationService.instance.current.invalidVersionIdWarning(
+          _currentVersionId ?? 'null',
+        ),
+      );
       isValid = false;
     }
 
     // 检查正在编辑的版本是否存在
     if (_activeEditingVersionId != null &&
         !_versionStates.containsKey(_activeEditingVersionId)) {
-debugPrint(LocalizationService.instance.current.invalidVersionIdWarning(_activeEditingVersionId ?? 'null'));
+      debugPrint(
+        LocalizationService.instance.current.invalidVersionIdWarning(
+          _activeEditingVersionId ?? 'null',
+        ),
+      );
       isValid = false;
     }
 
@@ -720,7 +951,11 @@ debugPrint(LocalizationService.instance.current.invalidVersionIdWarning(_activeE
     for (final entry in _versionStates.entries) {
       if (entry.value.sessionData != null &&
           !_versionDataCache.containsKey(entry.key)) {
-debugPrint(LocalizationService.instance.current.versionSessionCacheMissing_7421(entry.key));
+        debugPrint(
+          LocalizationService.instance.current.versionSessionCacheMissing_7421(
+            entry.key,
+          ),
+        );
         isValid = false;
       }
     }
@@ -806,8 +1041,15 @@ debugPrint(LocalizationService.instance.current.versionSessionCacheMissing_7421(
       _versionPathSelections[versionId]![legendGroupId]!.remove(path);
     }
 
-debugPrint(
-      LocalizationService.instance.current.versionLegendGroupStatusPath(versionId, legendGroupId, selected ? LocalizationService.instance.current.selected_3632 : LocalizationService.instance.current.unselected_3633, path),
+    debugPrint(
+      LocalizationService.instance.current.versionLegendGroupStatusPath(
+        versionId,
+        legendGroupId,
+        selected
+            ? LocalizationService.instance.current.selected_3632
+            : LocalizationService.instance.current.unselected_3633,
+        path,
+      ),
     );
     notifyListeners();
   }
@@ -827,7 +1069,12 @@ debugPrint(
     // 清空当前图例组在当前版本的选择
     _versionPathSelections[versionId]![legendGroupId]!.clear();
 
-debugPrint(LocalizationService.instance.current.resetVersionLegendSelection(versionId, legendGroupId));
+    debugPrint(
+      LocalizationService.instance.current.resetVersionLegendSelection(
+        versionId,
+        legendGroupId,
+      ),
+    );
     notifyListeners();
   }
 
@@ -841,12 +1088,18 @@ debugPrint(LocalizationService.instance.current.resetVersionLegendSelection(vers
     if (isPathSelectedByOtherGroups(folderPath, legendGroupId) ||
         getSelectedPaths(legendGroupId).contains(folderPath)) {
       // 路径仍在使用中，不清理
-debugPrint(LocalizationService.instance.current.steppedCleanupSkip_4827(folderPath));
+      debugPrint(
+        LocalizationService.instance.current.steppedCleanupSkip_4827(
+          folderPath,
+        ),
+      );
       return;
     }
 
     // 通知清理缓存（只清理该路径本身，不递归清理子路径）
-debugPrint(LocalizationService.instance.current.steppedCleanupLog(folderPath));
+    debugPrint(
+      LocalizationService.instance.current.steppedCleanupLog(folderPath),
+    );
     onClearCache(folderPath);
   }
 

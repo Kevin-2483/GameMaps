@@ -240,7 +240,9 @@ class _ReactiveScriptEditorWindowState
           children: [
             // 使用可拖动标题栏
             DraggableTitleBar(
-              title: '编辑脚本: ${widget.script.name}',
+              title: LocalizationService.instance.current.editScriptTitle(
+                widget.script.name,
+              ),
               icon: Icons.edit,
               leading: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -255,8 +257,10 @@ class _ReactiveScriptEditorWindowState
                       }
                     },
                     icon: const Icon(Icons.close),
-                    tooltip:
-                        LocalizationService.instance.current.closeEditor_7421,
+                    tooltip: LocalizationService
+                        .instance
+                        .current
+                        .closeEditorTooltip_7421,
                   ),
                   const SizedBox(width: 8),
                   // 未保存状态指示器
@@ -293,11 +297,11 @@ class _ReactiveScriptEditorWindowState
                       ? LocalizationService
                             .instance
                             .current
-                            .switchToLightTheme_7421
+                            .switchToLightThemeTooltip_7421
                       : LocalizationService
                             .instance
                             .current
-                            .switchToDarkTheme_8532,
+                            .switchToDarkThemeTooltip_8532,
                 ),
                 const SizedBox(width: 4),
 
@@ -305,7 +309,10 @@ class _ReactiveScriptEditorWindowState
                 IconButton(
                   onPressed: _hasUnsavedChanges ? _saveScript : null,
                   icon: const Icon(Icons.save),
-                  tooltip: LocalizationService.instance.current.saveScript_4821,
+                  tooltip: LocalizationService
+                      .instance
+                      .current
+                      .saveScriptTooltip_4821,
                 ),
 
                 // 分隔符

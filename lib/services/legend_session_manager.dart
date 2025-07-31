@@ -5,7 +5,7 @@ import '../models/legend_item.dart' as legend_db;
 import '../utils/legend_path_resolver.dart';
 import 'legend_cache_manager.dart';
 import 'dart:async';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 图例会话数据
@@ -346,9 +346,7 @@ class LegendSessionManager extends ChangeNotifier {
     } catch (e) {
       _markLegendFailed(legendPath);
       debugPrint(
-        LocalizationService.instance.current.legendSessionManagerLoadFailed(
-          e,
-        ),
+        LocalizationService.instance.current.legendSessionManagerLoadFailed(e),
       );
     }
   }

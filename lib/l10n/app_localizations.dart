@@ -1823,31 +1823,31 @@ abstract class AppLocalizations {
   /// No description provided for @serverChallengeReceived_4289.
   ///
   /// In zh, this message translates to:
-  /// **'收到服务器挑战'**
+  /// **'serverChallengeReceived'**
   String get serverChallengeReceived_4289;
 
   /// No description provided for @authFailedChallengeDecrypt_7281.
   ///
   /// In zh, this message translates to:
-  /// **'认证失败: 挑战解密失败'**
+  /// **'authFailedChallengeDecrypt'**
   String get authFailedChallengeDecrypt_7281;
 
   /// No description provided for @challengeResponseSentResult.
   ///
   /// In zh, this message translates to:
-  /// **'已发送挑战响应，结果: {sendResult}'**
+  /// **'challengeResponseSentResult: {sendResult}'**
   String challengeResponseSentResult(Object sendResult);
 
   /// No description provided for @authenticationSuccess_7421.
   ///
   /// In zh, this message translates to:
-  /// **'认证成功'**
+  /// **'authenticationSuccess'**
   String get authenticationSuccess_7421;
 
   /// No description provided for @authenticationFailed.
   ///
   /// In zh, this message translates to:
-  /// **'认证失败: {reason}'**
+  /// **'authenticationFailed: {reason}'**
   String authenticationFailed(Object reason);
 
   /// No description provided for @startWebSocketAuthProcess.
@@ -1859,14 +1859,14 @@ abstract class AppLocalizations {
   /// No description provided for @serverErrorResponse.
   ///
   /// In zh, this message translates to:
-  /// **'服务器返回错误: {error}'**
+  /// **'serverErrorResponse: {error}'**
   String serverErrorResponse(Object error);
 
   /// No description provided for @ignoredMessageType_7281.
   ///
   /// In zh, this message translates to:
-  /// **'忽略消息类型: {type}'**
-  String ignoredMessageType_7281(Object type);
+  /// **'ignoredMessageType: {messageType}'**
+  String ignoredMessageType_7281(Object messageType);
 
   /// No description provided for @parseMessageFailed_7285.
   ///
@@ -3647,19 +3647,19 @@ abstract class AppLocalizations {
   /// No description provided for @basicFloatingWindowExample_4821.
   ///
   /// In zh, this message translates to:
-  /// **'这是一个基础的浮动窗口示例'**
+  /// **'基础浮动窗口示例'**
   String get basicFloatingWindowExample_4821;
 
   /// No description provided for @windowContentDescription_4821.
   ///
   /// In zh, this message translates to:
-  /// **'窗口内容可以是任何Widget，包括文本、按钮、表单等。'**
+  /// **'窗口内容描述'**
   String get windowContentDescription_4821;
 
   /// No description provided for @windowSizeDescription_5739.
   ///
   /// In zh, this message translates to:
-  /// **'窗口会自动适应屏幕大小，默认占用90%的屏幕宽度和高度。'**
+  /// **'窗口尺寸描述'**
   String get windowSizeDescription_5739;
 
   /// No description provided for @exampleInputField_4521.
@@ -3677,7 +3677,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmButton_4821.
   ///
   /// In zh, this message translates to:
-  /// **'确定'**
+  /// **'确认'**
   String get confirmButton_4821;
 
   /// No description provided for @notifications_4821.
@@ -3785,7 +3785,7 @@ abstract class AppLocalizations {
   /// No description provided for @windowDragHint_4821.
   ///
   /// In zh, this message translates to:
-  /// **'这个窗口支持拖拽移动。您可以点击并拖拽标题栏来移动窗口位置。'**
+  /// **'拖拽标题栏可移动窗口'**
   String get windowDragHint_4821;
 
   /// No description provided for @windowBoundaryHint_4821.
@@ -4733,7 +4733,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileType_4821.
   ///
   /// In zh, this message translates to:
-  /// **'文件类型'**
+  /// **'文件'**
   String get fileType_4821;
 
   /// No description provided for @creationTimeLabel_5421.
@@ -4805,7 +4805,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileSize_4821.
   ///
   /// In zh, this message translates to:
-  /// **'大小'**
+  /// **'文件大小'**
   String get fileSize_4821;
 
   /// No description provided for @modifiedTimeLabel_4821.
@@ -4817,8 +4817,8 @@ abstract class AppLocalizations {
   /// No description provided for @creationTime_7281.
   ///
   /// In zh, this message translates to:
-  /// **'创建时间: {date}'**
-  String creationTime_7281(Object date);
+  /// **'创建时间'**
+  String get creationTime_7281;
 
   /// No description provided for @renameSuccess_4821.
   ///
@@ -5833,7 +5833,7 @@ abstract class AppLocalizations {
   /// No description provided for @playbackFailed_4821.
   ///
   /// In zh, this message translates to:
-  /// **'播放操作失败: {e}'**
+  /// **'播放失败 - {e}'**
   String playbackFailed_4821(Object e);
 
   /// No description provided for @audioBackgroundPlay_7281.
@@ -11246,7 +11246,7 @@ abstract class AppLocalizations {
   /// No description provided for @noAvailableLayers_4721.
   ///
   /// In zh, this message translates to:
-  /// **'暂无可用图层\n请先创建或显示图层'**
+  /// **'无可用图层'**
   String get noAvailableLayers_4721;
 
   /// No description provided for @addLayer_7281.
@@ -13615,7 +13615,7 @@ abstract class AppLocalizations {
   /// No description provided for @bindLegendGroup_5421.
   ///
   /// In zh, this message translates to:
-  /// **'点击绑定图例组'**
+  /// **'绑定图例组'**
   String get bindLegendGroup_5421;
 
   /// No description provided for @legendGroupUnavailable_5421.
@@ -13777,7 +13777,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectedWithMultiple_4827.
   ///
   /// In zh, this message translates to:
-  /// **'已选中 (同时选择)'**
+  /// **'已选中多个'**
   String get selectedWithMultiple_4827;
 
   /// No description provided for @layerGroupSelectionCancelled_4821.
@@ -24301,19 +24301,19 @@ abstract class AppLocalizations {
   /// No description provided for @authFailedMessage_4821.
   ///
   /// In zh, this message translates to:
-  /// **'认证失败，请检查用户名和密码'**
+  /// **'认证失败'**
   String get authFailedMessage_4821;
 
   /// No description provided for @invalidServerPath_4821.
   ///
   /// In zh, this message translates to:
-  /// **'服务器地址不正确或路径不存在'**
+  /// **'无效的服务器路径'**
   String get invalidServerPath_4821;
 
   /// No description provided for @connectionTimeoutError_4821.
   ///
   /// In zh, this message translates to:
-  /// **'连接超时，请检查网络和服务器地址'**
+  /// **'连接超时'**
   String get connectionTimeoutError_4821;
 
   /// No description provided for @fileDownloadSuccess.
@@ -24691,7 +24691,7 @@ abstract class AppLocalizations {
   /// No description provided for @windowSizeResetToDefault_4821.
   ///
   /// In zh, this message translates to:
-  /// **'窗口大小已重置为默认值'**
+  /// **'窗口大小设置已重置为默认值'**
   String get windowSizeResetToDefault_4821;
 
   /// No description provided for @autoSaveWindowSizeDisabled_7281.
@@ -25292,6 +25292,2010 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'点击开始录制按键'**
   String get clickToStartRecording_4821;
+
+  /// No description provided for @conflictCreated_7425.
+  ///
+  /// In zh, this message translates to:
+  /// **'冲突已创建'**
+  String get conflictCreated_7425;
+
+  /// No description provided for @remoteElementLockFailure_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理远程元素锁定失败'**
+  String get remoteElementLockFailure_4821;
+
+  /// No description provided for @remoteUserLeaveError_4728.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理远程用户离开失败'**
+  String get remoteUserLeaveError_4728;
+
+  /// No description provided for @remoteConflictError_7285.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理远程冲突失败'**
+  String get remoteConflictError_7285;
+
+  /// No description provided for @inputLabelHint_4521.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入标签名称'**
+  String get inputLabelHint_4521;
+
+  /// No description provided for @enterFullscreen_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'全屏'**
+  String get enterFullscreen_4821;
+
+  /// No description provided for @basicFloatingWindow_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础浮动窗口'**
+  String get basicFloatingWindow_4821;
+
+  /// No description provided for @settingsManagement_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置管理'**
+  String get settingsManagement_4821;
+
+  /// No description provided for @configureAppSettings_7285.
+  ///
+  /// In zh, this message translates to:
+  /// **'配置应用程序设置和首选项'**
+  String get configureAppSettings_7285;
+
+  /// No description provided for @refresh_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get refresh_4821;
+
+  /// No description provided for @smallDialogTitle_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'小型对话框'**
+  String get smallDialogTitle_4821;
+
+  /// No description provided for @settings_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置'**
+  String get settings_7281;
+
+  /// No description provided for @extensionWindowTitle_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'扩展方法窗口'**
+  String get extensionWindowTitle_7281;
+
+  /// No description provided for @draggableWindowTitle_4521.
+  ///
+  /// In zh, this message translates to:
+  /// **'可拖拽窗口'**
+  String get draggableWindowTitle_4521;
+
+  /// No description provided for @voiceNoteLabel_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'语音便签'**
+  String get voiceNoteLabel_7281;
+
+  /// No description provided for @deleteNoteLabel_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除便签'**
+  String get deleteNoteLabel_4821;
+
+  /// No description provided for @radialMenuInstructions_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'1. 按住中键或触摸板双指按下调起菜单\n2. 拖动到菜单项上会自动进入子菜单\n3. 拖回中心区域返回主菜单\n4. 松开鼠标/手指执行选择的动作\n5. 开启调试模式可以看到连线和角度信息'**
+  String get radialMenuInstructions_7281;
+
+  /// No description provided for @eraserTool_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'橡皮擦'**
+  String get eraserTool_4821;
+
+  /// No description provided for @duplicateLayer_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制图层'**
+  String get duplicateLayer_4821;
+
+  /// No description provided for @rotate_4822.
+  ///
+  /// In zh, this message translates to:
+  /// **'旋转'**
+  String get rotate_4822;
+
+  /// No description provided for @zoom_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'缩放'**
+  String get zoom_4821;
+
+  /// No description provided for @exportLabel_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出'**
+  String get exportLabel_7421;
+
+  /// No description provided for @properties_4281.
+  ///
+  /// In zh, this message translates to:
+  /// **'属性'**
+  String get properties_4281;
+
+  /// No description provided for @viewDetails_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看详情'**
+  String get viewDetails_4821;
+
+  /// No description provided for @share_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享'**
+  String get share_4821;
+
+  /// No description provided for @fileDetails_4722.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件详情'**
+  String get fileDetails_4722;
+
+  /// No description provided for @basicInfo_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'基本信息'**
+  String get basicInfo_4821;
+
+  /// No description provided for @copySuffix_3632.
+  ///
+  /// In zh, this message translates to:
+  /// **'(副本)'**
+  String get copySuffix_3632;
+
+  /// No description provided for @copyWithNumber_3632.
+  ///
+  /// In zh, this message translates to:
+  /// **'副本'**
+  String get copyWithNumber_3632;
+
+  /// No description provided for @copyWithTimestamp_3632.
+  ///
+  /// In zh, this message translates to:
+  /// **'副本'**
+  String get copyWithTimestamp_3632;
+
+  /// No description provided for @fastRewind10Seconds_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'快退10秒'**
+  String get fastRewind10Seconds_7281;
+
+  /// No description provided for @fastForward10Seconds_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'快进10秒'**
+  String get fastForward10Seconds_4821;
+
+  /// No description provided for @playbackMode_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放模式'**
+  String get playbackMode_1234;
+
+  /// No description provided for @fastForward10Seconds_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'快进10秒'**
+  String get fastForward10Seconds_7281;
+
+  /// No description provided for @htmlParseFailed_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'解析失败'**
+  String get htmlParseFailed_7281;
+
+  /// No description provided for @disabledIndicator_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'(禁用)'**
+  String get disabledIndicator_7421;
+
+  /// No description provided for @disabledLabel_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'(禁用)'**
+  String get disabledLabel_4821;
+
+  /// No description provided for @cleanScriptHandler_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理脚本函数处理器: {scriptId}'**
+  String cleanScriptHandler_7281(Object scriptId);
+
+  /// No description provided for @unknownClient_7284.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知客户端'**
+  String get unknownClient_7284;
+
+  /// No description provided for @stickyNoteTitle_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'便签'**
+  String get stickyNoteTitle_7421;
+
+  /// No description provided for @scriptManagement_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'脚本管理'**
+  String get scriptManagement_4821;
+
+  /// No description provided for @layersTitle_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'图层'**
+  String get layersTitle_7281;
+
+  /// No description provided for @shortcutVersion_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'快捷键版本'**
+  String get shortcutVersion_4821;
+
+  /// No description provided for @addColorFailed_4829.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加颜色失败'**
+  String get addColorFailed_4829;
+
+  /// No description provided for @colorAlreadyExists_1537.
+  ///
+  /// In zh, this message translates to:
+  /// **'该颜色已存在于自定义颜色中'**
+  String get colorAlreadyExists_1537;
+
+  /// No description provided for @imageUploadInstructions_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'1. 点击\"上传图片\"选择文件或\"剪贴板\"粘贴图片\n2. 在画布上拖拽创建选区\n3. 图片将自动适应选区大小\n4. 可通过Z层级检视器调整'**
+  String get imageUploadInstructions_4821;
+
+  /// No description provided for @imageProcessingInstructions_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'1. 点击\"上传图片\"选择文件或\"剪贴板\"粘贴图片\n2. 在画布上拖拽创建选区\n3. 图片将自动适应选区大小\n4. 可通过Z层级检视器调整'**
+  String get imageProcessingInstructions_4821;
+
+  /// No description provided for @rightClickToViewProperties_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'右键查看属性'**
+  String get rightClickToViewProperties_7421;
+
+  /// No description provided for @filterRemoved_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'已移除'**
+  String get filterRemoved_4821;
+
+  /// No description provided for @boundGroupsCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已绑定 {boundGroupsCount} 个图例组'**
+  String boundGroupsCount(Object boundGroupsCount);
+
+  /// No description provided for @layerGroupWithCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'图层组 ({count} 个图层)'**
+  String layerGroupWithCount(Object count);
+
+  /// No description provided for @selectedLegendItem_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前选中: {currentIndex}/{count}'**
+  String selectedLegendItem_7421(Object count, Object currentIndex);
+
+  /// No description provided for @clickToSelectLegend_5832.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击选择图例项'**
+  String get clickToSelectLegend_5832;
+
+  /// No description provided for @legendLinkOptional_4822.
+  ///
+  /// In zh, this message translates to:
+  /// **'图例链接 (可选)'**
+  String get legendLinkOptional_4822;
+
+  /// No description provided for @inputUrlOrSelectVfsFile_4823.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入网络链接或选择VFS文件'**
+  String get inputUrlOrSelectVfsFile_4823;
+
+  /// No description provided for @legendPathLabel_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'图例路径 (.legend)'**
+  String get legendPathLabel_4821;
+
+  /// No description provided for @legendPathHint_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择或输入.legend文件路径'**
+  String get legendPathHint_4821;
+
+  /// No description provided for @isSelectedNote_7425.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否选中'**
+  String get isSelectedNote_7425;
+
+  /// No description provided for @noteLayerHint_8421.
+  ///
+  /// In zh, this message translates to:
+  /// **'便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层'**
+  String get noteLayerHint_8421;
+
+  /// No description provided for @pageLayout_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'页面布局'**
+  String get pageLayout_7281;
+
+  /// No description provided for @paperSettings_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'纸张设置'**
+  String get paperSettings_4821;
+
+  /// No description provided for @paperSize_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'纸张大小'**
+  String get paperSize_7281;
+
+  /// No description provided for @pageOrientation_3632.
+  ///
+  /// In zh, this message translates to:
+  /// **'方向'**
+  String get pageOrientation_3632;
+
+  /// No description provided for @spacingSettings_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'间距设置'**
+  String get spacingSettings_4821;
+
+  /// No description provided for @marginLabel_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'页边距'**
+  String get marginLabel_7281;
+
+  /// No description provided for @imageSpacing_3632.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片间距'**
+  String get imageSpacing_3632;
+
+  /// No description provided for @fileName_7891.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名'**
+  String get fileName_7891;
+
+  /// No description provided for @exportInfoTitle_4728.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出信息'**
+  String get exportInfoTitle_4728;
+
+  /// No description provided for @unnamedLayer_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名图层'**
+  String get unnamedLayer_4821;
+
+  /// No description provided for @unknownTime_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get unknownTime_4821;
+
+  /// No description provided for @help_7282.
+  ///
+  /// In zh, this message translates to:
+  /// **'帮助'**
+  String get help_7282;
+
+  /// No description provided for @colorLabel_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'颜色'**
+  String get colorLabel_4821;
+
+  /// No description provided for @restoreMaximizedStateOnStartup_4281.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动时恢复窗口的最大化状态'**
+  String get restoreMaximizedStateOnStartup_4281;
+
+  /// No description provided for @rememberMaximizeState_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'记住最大化状态'**
+  String get rememberMaximizeState_4821;
+
+  /// No description provided for @customWindowSize_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义窗口大小'**
+  String get customWindowSize_4271;
+
+  /// No description provided for @windowWidth_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'窗口宽度'**
+  String get windowWidth_4821;
+
+  /// No description provided for @manualWindowSizeSetting_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动设置窗口的默认大小'**
+  String get manualWindowSizeSetting_4821;
+
+  /// No description provided for @currentSettingWithWidth_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设置: {width}px'**
+  String currentSettingWithWidth_7421(Object width);
+
+  /// No description provided for @windowHeight_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'窗口高度'**
+  String get windowHeight_4271;
+
+  /// No description provided for @currentSettings_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前设置: {value}px'**
+  String currentSettings_7421(Object value);
+
+  /// No description provided for @resetToDefault_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置为默认'**
+  String get resetToDefault_4271;
+
+  /// No description provided for @drawerWidthSetting_4521.
+  ///
+  /// In zh, this message translates to:
+  /// **'抽屉宽度设置'**
+  String get drawerWidthSetting_4521;
+
+  /// No description provided for @drawerWidth_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'抽屉宽度'**
+  String get drawerWidth_4271;
+
+  /// No description provided for @layerLegendSettingsWidth_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置图层图例绑定、图例组管理和Z层级检视器的宽度'**
+  String get layerLegendSettingsWidth_4821;
+
+  /// No description provided for @resetLayoutSettings_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置布局设置'**
+  String get resetLayoutSettings_4271;
+
+  /// No description provided for @confirmResetLayoutSettings_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要将布局设置重置为默认值吗？此操作不可撤销。'**
+  String get confirmResetLayoutSettings_4821;
+
+  /// No description provided for @cancel_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get cancel_7281;
+
+  /// No description provided for @drawingPanel_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'绘图面板'**
+  String get drawingPanel_1234;
+
+  /// No description provided for @layerPanel_5678.
+  ///
+  /// In zh, this message translates to:
+  /// **'图层面板'**
+  String get layerPanel_5678;
+
+  /// No description provided for @legendPanel_9012.
+  ///
+  /// In zh, this message translates to:
+  /// **'图例面板'**
+  String get legendPanel_9012;
+
+  /// No description provided for @stickyNotePanel_3456.
+  ///
+  /// In zh, this message translates to:
+  /// **'便签面板'**
+  String get stickyNotePanel_3456;
+
+  /// No description provided for @scriptPanel_7890.
+  ///
+  /// In zh, this message translates to:
+  /// **'脚本面板'**
+  String get scriptPanel_7890;
+
+  /// No description provided for @sidebar_1235.
+  ///
+  /// In zh, this message translates to:
+  /// **'侧边栏'**
+  String get sidebar_1235;
+
+  /// No description provided for @propertiesPanel_6789.
+  ///
+  /// In zh, this message translates to:
+  /// **'属性面板'**
+  String get propertiesPanel_6789;
+
+  /// No description provided for @toolbar_0123.
+  ///
+  /// In zh, this message translates to:
+  /// **'工具栏'**
+  String get toolbar_0123;
+
+  /// No description provided for @layoutResetSuccess_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'布局设置已重置'**
+  String get layoutResetSuccess_4821;
+
+  /// No description provided for @resetWindowSize_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置窗口大小'**
+  String get resetWindowSize_4271;
+
+  /// No description provided for @panelDefaultState_7428.
+  ///
+  /// In zh, this message translates to:
+  /// **'面板默认{state}状态'**
+  String panelDefaultState_7428(Object state);
+
+  /// No description provided for @confirmResetWindowSize_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要将窗口大小重置为默认值吗？'**
+  String get confirmResetWindowSize_4821;
+
+  /// No description provided for @resetButton_4521.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置'**
+  String get resetButton_4521;
+
+  /// No description provided for @penTool_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'钢笔'**
+  String get penTool_1234;
+
+  /// No description provided for @brushTool_5678.
+  ///
+  /// In zh, this message translates to:
+  /// **'画笔'**
+  String get brushTool_5678;
+
+  /// No description provided for @lineTool_9012.
+  ///
+  /// In zh, this message translates to:
+  /// **'直线'**
+  String get lineTool_9012;
+
+  /// No description provided for @dashedLineTool_3456.
+  ///
+  /// In zh, this message translates to:
+  /// **'虚线'**
+  String get dashedLineTool_3456;
+
+  /// No description provided for @arrowTool_7890.
+  ///
+  /// In zh, this message translates to:
+  /// **'箭头'**
+  String get arrowTool_7890;
+
+  /// No description provided for @solidRectangleTool_1235.
+  ///
+  /// In zh, this message translates to:
+  /// **'实心矩形'**
+  String get solidRectangleTool_1235;
+
+  /// No description provided for @hollowRectangleTool_5679.
+  ///
+  /// In zh, this message translates to:
+  /// **'空心矩形'**
+  String get hollowRectangleTool_5679;
+
+  /// No description provided for @diagonalLinesTool_9023.
+  ///
+  /// In zh, this message translates to:
+  /// **'单斜线'**
+  String get diagonalLinesTool_9023;
+
+  /// No description provided for @crossLinesTool_3467.
+  ///
+  /// In zh, this message translates to:
+  /// **'交叉线'**
+  String get crossLinesTool_3467;
+
+  /// No description provided for @dotGridTool_7901.
+  ///
+  /// In zh, this message translates to:
+  /// **'点阵'**
+  String get dotGridTool_7901;
+
+  /// No description provided for @pixelPenTool_1245.
+  ///
+  /// In zh, this message translates to:
+  /// **'像素笔'**
+  String get pixelPenTool_1245;
+
+  /// No description provided for @circleTool_5689.
+  ///
+  /// In zh, this message translates to:
+  /// **'圆形'**
+  String get circleTool_5689;
+
+  /// No description provided for @textTool_9034.
+  ///
+  /// In zh, this message translates to:
+  /// **'文本'**
+  String get textTool_9034;
+
+  /// No description provided for @eraserTool_3478.
+  ///
+  /// In zh, this message translates to:
+  /// **'橡皮擦'**
+  String get eraserTool_3478;
+
+  /// No description provided for @imageSelectionTool_7912.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片选区'**
+  String get imageSelectionTool_7912;
+
+  /// No description provided for @notSet_8921.
+  ///
+  /// In zh, this message translates to:
+  /// **'未设置'**
+  String get notSet_8921;
+
+  /// No description provided for @copyWithTimestamp_8254.
+  ///
+  /// In zh, this message translates to:
+  /// **'副本'**
+  String get copyWithTimestamp_8254;
+
+  /// No description provided for @configUpdated_42.
+  ///
+  /// In zh, this message translates to:
+  /// **'配置已更新'**
+  String get configUpdated_42;
+
+  /// No description provided for @configAdded_17.
+  ///
+  /// In zh, this message translates to:
+  /// **'配置已添加'**
+  String get configAdded_17;
+
+  /// No description provided for @editAuthAccount_5421.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑认证账户'**
+  String get editAuthAccount_5421;
+
+  /// No description provided for @addAuthAccount_8753.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加认证账户'**
+  String get addAuthAccount_8753;
+
+  /// No description provided for @accountNameHint_7532.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：我的账户'**
+  String get accountNameHint_7532;
+
+  /// No description provided for @usernameLabel_4521.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名'**
+  String get usernameLabel_4521;
+
+  /// No description provided for @usernameRequired_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入用户名'**
+  String get usernameRequired_4821;
+
+  /// No description provided for @enterPassword_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入密码'**
+  String get enterPassword_4821;
+
+  /// No description provided for @passwordKeepEmpty_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码（留空保持不变）'**
+  String get passwordKeepEmpty_1234;
+
+  /// No description provided for @password_5678.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get password_5678;
+
+  /// No description provided for @saveButton_5421.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get saveButton_5421;
+
+  /// No description provided for @addButton_5421.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加'**
+  String get addButton_5421;
+
+  /// No description provided for @accountUpdated_5421.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户已更新'**
+  String get accountUpdated_5421;
+
+  /// No description provided for @accountAdded_5421.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户已添加'**
+  String get accountAdded_5421;
+
+  /// No description provided for @serverUrlRequired_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入服务器 URL'**
+  String get serverUrlRequired_4821;
+
+  /// No description provided for @invalidUrlPrompt_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入有效的 URL'**
+  String get invalidUrlPrompt_7281;
+
+  /// No description provided for @storageFolderLabel_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储文件夹'**
+  String get storageFolderLabel_4821;
+
+  /// No description provided for @folderNameRules_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)，不能包含中文字符，长度不超过100字符'**
+  String get folderNameRules_4821;
+
+  /// No description provided for @inputFolderPath_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入存储文件夹路径'**
+  String get inputFolderPath_4821;
+
+  /// No description provided for @storagePathLengthExceeded_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储路径长度不能超过100个字符'**
+  String get storagePathLengthExceeded_4821;
+
+  /// No description provided for @pathNoChineseChars_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储路径不能包含中文字符'**
+  String get pathNoChineseChars_4821;
+
+  /// No description provided for @invalidPathCharactersError_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'存储路径只能包含字母、数字、斜杠(/)、下划线(_)、连字符(-)'**
+  String get invalidPathCharactersError_4821;
+
+  /// No description provided for @invalidPathFormat_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'无效的路径格式'**
+  String get invalidPathFormat_4821;
+
+  /// No description provided for @authenticationAccount_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证账户'**
+  String get authenticationAccount_7281;
+
+  /// No description provided for @enableConfiguration_4271.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用配置'**
+  String get enableConfiguration_4271;
+
+  /// No description provided for @selectAuthAccount_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择认证账户'**
+  String get selectAuthAccount_4821;
+
+  /// No description provided for @webPlatform_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'Web平台'**
+  String get webPlatform_1234;
+
+  /// No description provided for @currentPlatform_5678.
+  ///
+  /// In zh, this message translates to:
+  /// **'此平台'**
+  String get currentPlatform_5678;
+
+  /// No description provided for @webCopyHint_9012.
+  ///
+  /// In zh, this message translates to:
+  /// **'Web平台'**
+  String get webCopyHint_9012;
+
+  /// No description provided for @nativeCopyHint_3456.
+  ///
+  /// In zh, this message translates to:
+  /// **'此平台'**
+  String get nativeCopyHint_3456;
+
+  /// No description provided for @databaseExportSuccess_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'合并数据库导出成功'**
+  String get databaseExportSuccess_7421;
+
+  /// No description provided for @filePath_8423.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件路径'**
+  String get filePath_8423;
+
+  /// No description provided for @exportVersion_9234.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出版本'**
+  String get exportVersion_9234;
+
+  /// No description provided for @totalItemsCount_1345.
+  ///
+  /// In zh, this message translates to:
+  /// **'总项目数量'**
+  String get totalItemsCount_1345;
+
+  /// No description provided for @includeMaps_2456.
+  ///
+  /// In zh, this message translates to:
+  /// **'包含地图'**
+  String get includeMaps_2456;
+
+  /// No description provided for @includeLegends_3567.
+  ///
+  /// In zh, this message translates to:
+  /// **'包含图例'**
+  String get includeLegends_3567;
+
+  /// No description provided for @includeLocalizations_4678.
+  ///
+  /// In zh, this message translates to:
+  /// **'包含本地化'**
+  String get includeLocalizations_4678;
+
+  /// No description provided for @importFailed_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入失败'**
+  String get importFailed_7281;
+
+  /// No description provided for @mapImportFailed_4728.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入地图失败'**
+  String get mapImportFailed_4728;
+
+  /// No description provided for @tempQueuePlayFailed_4829.
+  ///
+  /// In zh, this message translates to:
+  /// **'临时队列播放失败 - {e}'**
+  String tempQueuePlayFailed_4829(Object e);
+
+  /// No description provided for @pauseFailed_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂停失败'**
+  String get pauseFailed_7281;
+
+  /// No description provided for @failedToGetAudioFile_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法从VFS获取音频文件'**
+  String get failedToGetAudioFile_4821;
+
+  /// No description provided for @muteToggleFailed_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换静音失败'**
+  String get muteToggleFailed_7281;
+
+  /// No description provided for @setAudioBalanceFailed_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置音频平衡失败 - {e}'**
+  String setAudioBalanceFailed_4821(Object e);
+
+  /// No description provided for @jsonParseError_7282.
+  ///
+  /// In zh, this message translates to:
+  /// **'Error parsing options JSON: {error}'**
+  String jsonParseError_7282(Object error);
+
+  /// No description provided for @voiceSynthesisLog_7283.
+  ///
+  /// In zh, this message translates to:
+  /// **'语音合成: \"{text}\"'**
+  String voiceSynthesisLog_7283(Object text);
+
+  /// No description provided for @languageLog_7284.
+  ///
+  /// In zh, this message translates to:
+  /// **', language: {language}'**
+  String languageLog_7284(Object language);
+
+  /// No description provided for @speechRateLog_7285.
+  ///
+  /// In zh, this message translates to:
+  /// **', rate: {rate}'**
+  String speechRateLog_7285(Object rate);
+
+  /// No description provided for @volumeLog_7286.
+  ///
+  /// In zh, this message translates to:
+  /// **', volume: {volume}'**
+  String volumeLog_7286(Object volume);
+
+  /// No description provided for @pitchLog_7287.
+  ///
+  /// In zh, this message translates to:
+  /// **', pitch: {pitch}'**
+  String pitchLog_7287(Object pitch);
+
+  /// No description provided for @voiceLog_7288.
+  ///
+  /// In zh, this message translates to:
+  /// **', voice: {voice}'**
+  String voiceLog_7288(Object voice);
+
+  /// No description provided for @tempFileGenerationFailed_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'生成临时文件失败'**
+  String get tempFileGenerationFailed_7281;
+
+  /// No description provided for @connectionFailed_9372.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败'**
+  String get connectionFailed_9372;
+
+  /// No description provided for @connectionFailedWithError_7281.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败：{error}'**
+  String connectionFailedWithError_7281(Object error);
+
+  /// No description provided for @imageSelectionError_4829.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图片时发生错误: {e}'**
+  String imageSelectionError_4829(Object e);
+
+  /// No description provided for @unknownReason_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知原因'**
+  String get unknownReason_7421;
+
+  /// No description provided for @unknownError_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知错误'**
+  String get unknownError_7421;
+
+  /// No description provided for @drawingToolsTitle_4722.
+  ///
+  /// In zh, this message translates to:
+  /// **'绘制工具'**
+  String get drawingToolsTitle_4722;
+
+  /// No description provided for @noVisibleLayersDisabled_4723.
+  ///
+  /// In zh, this message translates to:
+  /// **'无可见图层，绘制工具已禁用'**
+  String get noVisibleLayersDisabled_4723;
+
+  /// No description provided for @drawToStickyNote_4724.
+  ///
+  /// In zh, this message translates to:
+  /// **'绘制到便签: {title}'**
+  String drawToStickyNote_4724(Object title);
+
+  /// No description provided for @drawToLayer_4725.
+  ///
+  /// In zh, this message translates to:
+  /// **'绘制到: {name}'**
+  String drawToLayer_4725(Object name);
+
+  /// No description provided for @drawToDefaultLayer_4726.
+  ///
+  /// In zh, this message translates to:
+  /// **'绘制到: {name} (默认最上层)'**
+  String drawToDefaultLayer_4726(Object name);
+
+  /// No description provided for @selectedLayerGroup_4727.
+  ///
+  /// In zh, this message translates to:
+  /// **'选中图层组 ({count} 个图层)'**
+  String selectedLayerGroup_4727(Object count);
+
+  /// No description provided for @noToolSelected_4728.
+  ///
+  /// In zh, this message translates to:
+  /// **'未选择工具'**
+  String get noToolSelected_4728;
+
+  /// No description provided for @editScriptTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑脚本: {scriptName}'**
+  String editScriptTitle(Object scriptName);
+
+  /// No description provided for @closeEditorTooltip_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭编辑器'**
+  String get closeEditorTooltip_7421;
+
+  /// No description provided for @switchToLightThemeTooltip_7421.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换到浅色主题'**
+  String get switchToLightThemeTooltip_7421;
+
+  /// No description provided for @switchToDarkThemeTooltip_8532.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换到深色主题'**
+  String get switchToDarkThemeTooltip_8532;
+
+  /// No description provided for @saveScriptTooltip_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存脚本'**
+  String get saveScriptTooltip_4821;
+
+  /// No description provided for @selectPreviousLayer_3821.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择上一个图层'**
+  String get selectPreviousLayer_3821;
+
+  /// No description provided for @selectNextLayer_3822.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择下一个图层'**
+  String get selectNextLayer_3822;
+
+  /// No description provided for @selectPreviousLayerGroup_3823.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择上一个图层组'**
+  String get selectPreviousLayerGroup_3823;
+
+  /// No description provided for @selectNextLayerGroup_3824.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择下一个图层组'**
+  String get selectNextLayerGroup_3824;
+
+  /// No description provided for @openPreviousLegendGroup_3825.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开上一个图例组'**
+  String get openPreviousLegendGroup_3825;
+
+  /// No description provided for @openNextLegendGroup_3826.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开下一个图例组'**
+  String get openNextLegendGroup_3826;
+
+  /// No description provided for @openLegendGroupDrawer_3827.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开图例组绑定抽屉'**
+  String get openLegendGroupDrawer_3827;
+
+  /// No description provided for @clearLayerSelection_3828.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除图层/图层组选择'**
+  String get clearLayerSelection_3828;
+
+  /// No description provided for @undo_3829.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤销'**
+  String get undo_3829;
+
+  /// No description provided for @redo_3830.
+  ///
+  /// In zh, this message translates to:
+  /// **'重做'**
+  String get redo_3830;
+
+  /// No description provided for @save_3831.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get save_3831;
+
+  /// No description provided for @copy_3832.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get copy_3832;
+
+  /// No description provided for @paste_3833.
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴'**
+  String get paste_3833;
+
+  /// No description provided for @delete_3834.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get delete_3834;
+
+  /// No description provided for @selectLayerGroup1_3835.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 1'**
+  String get selectLayerGroup1_3835;
+
+  /// No description provided for @selectLayerGroup2_3836.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 2'**
+  String get selectLayerGroup2_3836;
+
+  /// No description provided for @selectLayerGroup3_3837.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 3'**
+  String get selectLayerGroup3_3837;
+
+  /// No description provided for @selectLayerGroup4_3838.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 4'**
+  String get selectLayerGroup4_3838;
+
+  /// No description provided for @selectLayerGroup5_3839.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 5'**
+  String get selectLayerGroup5_3839;
+
+  /// No description provided for @selectLayerGroup6_3840.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 6'**
+  String get selectLayerGroup6_3840;
+
+  /// No description provided for @selectLayerGroup7_3841.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 7'**
+  String get selectLayerGroup7_3841;
+
+  /// No description provided for @selectLayerGroup8_3842.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 8'**
+  String get selectLayerGroup8_3842;
+
+  /// No description provided for @selectLayerGroup9_3843.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 9'**
+  String get selectLayerGroup9_3843;
+
+  /// No description provided for @selectLayerGroup10_3844.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层组 10'**
+  String get selectLayerGroup10_3844;
+
+  /// No description provided for @selectLayer1_3845.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 1'**
+  String get selectLayer1_3845;
+
+  /// No description provided for @selectLayer2_3846.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 2'**
+  String get selectLayer2_3846;
+
+  /// No description provided for @selectLayer3_3847.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 3'**
+  String get selectLayer3_3847;
+
+  /// No description provided for @selectLayer4_3848.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 4'**
+  String get selectLayer4_3848;
+
+  /// No description provided for @selectLayer5_3849.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 5'**
+  String get selectLayer5_3849;
+
+  /// No description provided for @selectLayer6_3850.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 6'**
+  String get selectLayer6_3850;
+
+  /// No description provided for @selectLayer7_3851.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 7'**
+  String get selectLayer7_3851;
+
+  /// No description provided for @selectLayer8_3852.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 8'**
+  String get selectLayer8_3852;
+
+  /// No description provided for @selectLayer9_3853.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 9'**
+  String get selectLayer9_3853;
+
+  /// No description provided for @selectLayer10_3854.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 10'**
+  String get selectLayer10_3854;
+
+  /// No description provided for @selectLayer11_3855.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 11'**
+  String get selectLayer11_3855;
+
+  /// No description provided for @selectLayer12_3856.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择图层 12'**
+  String get selectLayer12_3856;
+
+  /// No description provided for @toggleLeftSidebar_3857.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换左侧边栏'**
+  String get toggleLeftSidebar_3857;
+
+  /// No description provided for @openZElementInspector_3858.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开Z元素检视器'**
+  String get openZElementInspector_3858;
+
+  /// No description provided for @toggleLegendManagementDrawer_3859.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换图例管理抽屉'**
+  String get toggleLegendManagementDrawer_3859;
+
+  /// No description provided for @hideOtherLayers_3860.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏其他图层'**
+  String get hideOtherLayers_3860;
+
+  /// No description provided for @hideOtherLayerGroups_3861.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏其他图层组'**
+  String get hideOtherLayerGroups_3861;
+
+  /// No description provided for @showCurrentLayer_3862.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示当前图层'**
+  String get showCurrentLayer_3862;
+
+  /// No description provided for @showCurrentLayerGroup_3863.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示当前图层组'**
+  String get showCurrentLayerGroup_3863;
+
+  /// No description provided for @hideOtherLegendGroups_3864.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏其他图例组'**
+  String get hideOtherLegendGroups_3864;
+
+  /// No description provided for @showCurrentLegendGroup_3865.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示当前图例组'**
+  String get showCurrentLegendGroup_3865;
+
+  /// No description provided for @showShortcutList_3866.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示快捷键列表'**
+  String get showShortcutList_3866;
+
+  /// No description provided for @switchToPreviousVersion_3867.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换到上一个版本'**
+  String get switchToPreviousVersion_3867;
+
+  /// No description provided for @switchToNextVersion_3868.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换到下一个版本'**
+  String get switchToNextVersion_3868;
+
+  /// No description provided for @createNewVersion_3869.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增版本'**
+  String get createNewVersion_3869;
+
+  /// No description provided for @ttsTestText_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'这是一个语音合成测试，当前设置已应用。'**
+  String get ttsTestText_4821;
+
+  /// No description provided for @chinese_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文'**
+  String get chinese_4821;
+
+  /// No description provided for @chineseSimplified_4822.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文 (简体)'**
+  String get chineseSimplified_4822;
+
+  /// No description provided for @chineseTraditional_4823.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文 (繁体)'**
+  String get chineseTraditional_4823;
+
+  /// No description provided for @english_4824.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语'**
+  String get english_4824;
+
+  /// No description provided for @englishUS_4825.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语 (美国)'**
+  String get englishUS_4825;
+
+  /// No description provided for @englishUK_4826.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语 (英国)'**
+  String get englishUK_4826;
+
+  /// No description provided for @japanese_4827.
+  ///
+  /// In zh, this message translates to:
+  /// **'日语'**
+  String get japanese_4827;
+
+  /// No description provided for @korean_4828.
+  ///
+  /// In zh, this message translates to:
+  /// **'韩语'**
+  String get korean_4828;
+
+  /// No description provided for @french_4829.
+  ///
+  /// In zh, this message translates to:
+  /// **'法语'**
+  String get french_4829;
+
+  /// No description provided for @german_4830.
+  ///
+  /// In zh, this message translates to:
+  /// **'德语'**
+  String get german_4830;
+
+  /// No description provided for @spanish_4831.
+  ///
+  /// In zh, this message translates to:
+  /// **'西班牙语'**
+  String get spanish_4831;
+
+  /// No description provided for @italian_4832.
+  ///
+  /// In zh, this message translates to:
+  /// **'意大利语'**
+  String get italian_4832;
+
+  /// No description provided for @portuguese_4833.
+  ///
+  /// In zh, this message translates to:
+  /// **'葡萄牙语'**
+  String get portuguese_4833;
+
+  /// No description provided for @portugueseBrazil_4834.
+  ///
+  /// In zh, this message translates to:
+  /// **'葡萄牙语 (巴西)'**
+  String get portugueseBrazil_4834;
+
+  /// No description provided for @russian_4835.
+  ///
+  /// In zh, this message translates to:
+  /// **'俄语'**
+  String get russian_4835;
+
+  /// No description provided for @arabic_4836.
+  ///
+  /// In zh, this message translates to:
+  /// **'阿拉伯语'**
+  String get arabic_4836;
+
+  /// No description provided for @thai_4837.
+  ///
+  /// In zh, this message translates to:
+  /// **'泰语'**
+  String get thai_4837;
+
+  /// No description provided for @vietnamese_4838.
+  ///
+  /// In zh, this message translates to:
+  /// **'越南语'**
+  String get vietnamese_4838;
+
+  /// No description provided for @hindi_4839.
+  ///
+  /// In zh, this message translates to:
+  /// **'印地语'**
+  String get hindi_4839;
+
+  /// No description provided for @automationScriptExample_1234.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动化脚本示例'**
+  String get automationScriptExample_1234;
+
+  /// No description provided for @totalLayers_5678.
+  ///
+  /// In zh, this message translates to:
+  /// **'共有'**
+  String get totalLayers_5678;
+
+  /// No description provided for @layers_9101.
+  ///
+  /// In zh, this message translates to:
+  /// **'个图层'**
+  String get layers_9101;
+
+  /// No description provided for @iterateAllElements_1121.
+  ///
+  /// In zh, this message translates to:
+  /// **'遍历所有元素'**
+  String get iterateAllElements_1121;
+
+  /// No description provided for @element_3141.
+  ///
+  /// In zh, this message translates to:
+  /// **'元素'**
+  String get element_3141;
+
+  /// No description provided for @type_5161.
+  ///
+  /// In zh, this message translates to:
+  /// **'类型'**
+  String get type_5161;
+
+  /// No description provided for @animationScriptExample_7181.
+  ///
+  /// In zh, this message translates to:
+  /// **'动画脚本示例'**
+  String get animationScriptExample_7181;
+
+  /// No description provided for @animateColorChange_9202.
+  ///
+  /// In zh, this message translates to:
+  /// **'动画改变颜色'**
+  String get animateColorChange_9202;
+
+  /// No description provided for @animateElementMovement_1222.
+  ///
+  /// In zh, this message translates to:
+  /// **'动画移动元素'**
+  String get animateElementMovement_1222;
+
+  /// No description provided for @filterScriptExample_3242.
+  ///
+  /// In zh, this message translates to:
+  /// **'过滤脚本示例'**
+  String get filterScriptExample_3242;
+
+  /// No description provided for @foundBlueRectangles_5262.
+  ///
+  /// In zh, this message translates to:
+  /// **'找到'**
+  String get foundBlueRectangles_5262;
+
+  /// No description provided for @blueRectangles_7282.
+  ///
+  /// In zh, this message translates to:
+  /// **'个蓝色矩形'**
+  String get blueRectangles_7282;
+
+  /// No description provided for @statisticsScriptExample_9303.
+  ///
+  /// In zh, this message translates to:
+  /// **'统计脚本示例'**
+  String get statisticsScriptExample_9303;
+
+  /// No description provided for @layer_1323.
+  ///
+  /// In zh, this message translates to:
+  /// **'图层'**
+  String get layer_1323;
+
+  /// No description provided for @elements_3343.
+  ///
+  /// In zh, this message translates to:
+  /// **'个元素'**
+  String get elements_3343;
+
+  /// No description provided for @total_5363.
+  ///
+  /// In zh, this message translates to:
+  /// **'总计'**
+  String get total_5363;
+
+  /// No description provided for @elements_7383.
+  ///
+  /// In zh, this message translates to:
+  /// **'个元素'**
+  String get elements_7383;
+
+  /// No description provided for @user_4821.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户'**
+  String get user_4821;
+
+  /// No description provided for @dutch_4840.
+  ///
+  /// In zh, this message translates to:
+  /// **'荷兰语'**
+  String get dutch_4840;
+
+  /// No description provided for @dutchNL_4841.
+  ///
+  /// In zh, this message translates to:
+  /// **'荷兰语 (荷兰)'**
+  String get dutchNL_4841;
+
+  /// No description provided for @swedish_4842.
+  ///
+  /// In zh, this message translates to:
+  /// **'瑞典语'**
+  String get swedish_4842;
+
+  /// No description provided for @swedishSE_4843.
+  ///
+  /// In zh, this message translates to:
+  /// **'瑞典语 (瑞典)'**
+  String get swedishSE_4843;
+
+  /// No description provided for @danish_4844.
+  ///
+  /// In zh, this message translates to:
+  /// **'丹麦语'**
+  String get danish_4844;
+
+  /// No description provided for @danishDK_4845.
+  ///
+  /// In zh, this message translates to:
+  /// **'丹麦语 (丹麦)'**
+  String get danishDK_4845;
+
+  /// No description provided for @norwegian_4846.
+  ///
+  /// In zh, this message translates to:
+  /// **'挪威语'**
+  String get norwegian_4846;
+
+  /// No description provided for @norwegianNO_4847.
+  ///
+  /// In zh, this message translates to:
+  /// **'挪威语 (挪威)'**
+  String get norwegianNO_4847;
+
+  /// No description provided for @finnish_4848.
+  ///
+  /// In zh, this message translates to:
+  /// **'芬兰语'**
+  String get finnish_4848;
+
+  /// No description provided for @finnishFI_4849.
+  ///
+  /// In zh, this message translates to:
+  /// **'芬兰语 (芬兰)'**
+  String get finnishFI_4849;
+
+  /// No description provided for @polish_4850.
+  ///
+  /// In zh, this message translates to:
+  /// **'波兰语'**
+  String get polish_4850;
+
+  /// No description provided for @polishPL_4851.
+  ///
+  /// In zh, this message translates to:
+  /// **'波兰语 (波兰)'**
+  String get polishPL_4851;
+
+  /// No description provided for @czech_4852.
+  ///
+  /// In zh, this message translates to:
+  /// **'捷克语'**
+  String get czech_4852;
+
+  /// No description provided for @czechCZ_4853.
+  ///
+  /// In zh, this message translates to:
+  /// **'捷克语 (捷克)'**
+  String get czechCZ_4853;
+
+  /// No description provided for @hungarian_4854.
+  ///
+  /// In zh, this message translates to:
+  /// **'匈牙利语'**
+  String get hungarian_4854;
+
+  /// No description provided for @hungarianHU_4855.
+  ///
+  /// In zh, this message translates to:
+  /// **'匈牙利语 (匈牙利)'**
+  String get hungarianHU_4855;
+
+  /// No description provided for @romanian_4856.
+  ///
+  /// In zh, this message translates to:
+  /// **'罗马尼亚语'**
+  String get romanian_4856;
+
+  /// No description provided for @romanianRO_4857.
+  ///
+  /// In zh, this message translates to:
+  /// **'罗马尼亚语 (罗马尼亚)'**
+  String get romanianRO_4857;
+
+  /// No description provided for @bulgarian_4858.
+  ///
+  /// In zh, this message translates to:
+  /// **'保加利亚语'**
+  String get bulgarian_4858;
+
+  /// No description provided for @bulgarianBG_4859.
+  ///
+  /// In zh, this message translates to:
+  /// **'保加利亚语 (保加利亚)'**
+  String get bulgarianBG_4859;
+
+  /// No description provided for @croatian_4860.
+  ///
+  /// In zh, this message translates to:
+  /// **'克罗地亚语'**
+  String get croatian_4860;
+
+  /// No description provided for @croatianHR_4861.
+  ///
+  /// In zh, this message translates to:
+  /// **'克罗地亚语 (克罗地亚)'**
+  String get croatianHR_4861;
+
+  /// No description provided for @slovak_4862.
+  ///
+  /// In zh, this message translates to:
+  /// **'斯洛伐克语'**
+  String get slovak_4862;
+
+  /// No description provided for @slovakSK_4863.
+  ///
+  /// In zh, this message translates to:
+  /// **'斯洛伐克语 (斯洛伐克)'**
+  String get slovakSK_4863;
+
+  /// No description provided for @slovenian_4864.
+  ///
+  /// In zh, this message translates to:
+  /// **'斯洛文尼亚语'**
+  String get slovenian_4864;
+
+  /// No description provided for @slovenianSI_4865.
+  ///
+  /// In zh, this message translates to:
+  /// **'斯洛文尼亚语 (斯洛文尼亚)'**
+  String get slovenianSI_4865;
+
+  /// No description provided for @estonian_4866.
+  ///
+  /// In zh, this message translates to:
+  /// **'爱沙尼亚语'**
+  String get estonian_4866;
+
+  /// No description provided for @estonianEE_4867.
+  ///
+  /// In zh, this message translates to:
+  /// **'爱沙尼亚语 (爱沙尼亚)'**
+  String get estonianEE_4867;
+
+  /// No description provided for @latvian_4868.
+  ///
+  /// In zh, this message translates to:
+  /// **'拉脱维亚语'**
+  String get latvian_4868;
+
+  /// No description provided for @latvianLV_4869.
+  ///
+  /// In zh, this message translates to:
+  /// **'拉脱维亚语 (拉脱维亚)'**
+  String get latvianLV_4869;
+
+  /// No description provided for @lithuanian_4870.
+  ///
+  /// In zh, this message translates to:
+  /// **'立陶宛语'**
+  String get lithuanian_4870;
+
+  /// No description provided for @lithuanianLT_4871.
+  ///
+  /// In zh, this message translates to:
+  /// **'立陶宛语 (立陶宛)'**
+  String get lithuanianLT_4871;
+
+  /// No description provided for @turkish_4872.
+  ///
+  /// In zh, this message translates to:
+  /// **'土耳其语'**
+  String get turkish_4872;
+
+  /// No description provided for @turkishTR_4873.
+  ///
+  /// In zh, this message translates to:
+  /// **'土耳其语 (土耳其)'**
+  String get turkishTR_4873;
+
+  /// No description provided for @hebrew_4874.
+  ///
+  /// In zh, this message translates to:
+  /// **'希伯来语'**
+  String get hebrew_4874;
+
+  /// No description provided for @hebrewIL_4875.
+  ///
+  /// In zh, this message translates to:
+  /// **'希伯来语 (以色列)'**
+  String get hebrewIL_4875;
+
+  /// No description provided for @indonesian_4876.
+  ///
+  /// In zh, this message translates to:
+  /// **'印尼语'**
+  String get indonesian_4876;
+
+  /// No description provided for @indonesianID_4877.
+  ///
+  /// In zh, this message translates to:
+  /// **'印尼语 (印尼)'**
+  String get indonesianID_4877;
+
+  /// No description provided for @malay_4878.
+  ///
+  /// In zh, this message translates to:
+  /// **'马来语'**
+  String get malay_4878;
+
+  /// No description provided for @malayMY_4879.
+  ///
+  /// In zh, this message translates to:
+  /// **'马来语 (马来西亚)'**
+  String get malayMY_4879;
+
+  /// No description provided for @filipino_4880.
+  ///
+  /// In zh, this message translates to:
+  /// **'菲律宾语'**
+  String get filipino_4880;
+
+  /// No description provided for @filipinoPH_4881.
+  ///
+  /// In zh, this message translates to:
+  /// **'菲律宾语 (菲律宾)'**
+  String get filipinoPH_4881;
+
+  /// No description provided for @frenchFR_4882.
+  ///
+  /// In zh, this message translates to:
+  /// **'法语 (法国)'**
+  String get frenchFR_4882;
+
+  /// No description provided for @frenchCA_4883.
+  ///
+  /// In zh, this message translates to:
+  /// **'法语 (加拿大)'**
+  String get frenchCA_4883;
+
+  /// No description provided for @germanDE_4884.
+  ///
+  /// In zh, this message translates to:
+  /// **'德语 (德国)'**
+  String get germanDE_4884;
+
+  /// No description provided for @spanishES_4885.
+  ///
+  /// In zh, this message translates to:
+  /// **'西班牙语 (西班牙)'**
+  String get spanishES_4885;
+
+  /// No description provided for @spanishMX_4886.
+  ///
+  /// In zh, this message translates to:
+  /// **'西班牙语 (墨西哥)'**
+  String get spanishMX_4886;
+
+  /// No description provided for @italianIT_4887.
+  ///
+  /// In zh, this message translates to:
+  /// **'意大利语 (意大利)'**
+  String get italianIT_4887;
+
+  /// No description provided for @portuguesePT_4888.
+  ///
+  /// In zh, this message translates to:
+  /// **'葡萄牙语 (葡萄牙)'**
+  String get portuguesePT_4888;
+
+  /// No description provided for @russianRU_4889.
+  ///
+  /// In zh, this message translates to:
+  /// **'俄语 (俄罗斯)'**
+  String get russianRU_4889;
+
+  /// No description provided for @arabicSA_4890.
+  ///
+  /// In zh, this message translates to:
+  /// **'阿拉伯语 (沙特阿拉伯)'**
+  String get arabicSA_4890;
+
+  /// No description provided for @thaiTH_4891.
+  ///
+  /// In zh, this message translates to:
+  /// **'泰语 (泰国)'**
+  String get thaiTH_4891;
+
+  /// No description provided for @vietnameseVN_4892.
+  ///
+  /// In zh, this message translates to:
+  /// **'越南语 (越南)'**
+  String get vietnameseVN_4892;
+
+  /// No description provided for @hindiIN_4893.
+  ///
+  /// In zh, this message translates to:
+  /// **'印地语 (印度)'**
+  String get hindiIN_4893;
+
+  /// No description provided for @chineseHK_4894.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文 (香港)'**
+  String get chineseHK_4894;
+
+  /// No description provided for @chineseSG_4895.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文 (新加坡)'**
+  String get chineseSG_4895;
+
+  /// No description provided for @englishAU_4896.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语 (澳大利亚)'**
+  String get englishAU_4896;
+
+  /// No description provided for @englishCA_4897.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语 (加拿大)'**
+  String get englishCA_4897;
+
+  /// No description provided for @englishIN_4898.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语 (印度)'**
+  String get englishIN_4898;
+
+  /// No description provided for @japaneseJP_4899.
+  ///
+  /// In zh, this message translates to:
+  /// **'日语 (日本)'**
+  String get japaneseJP_4899;
+
+  /// No description provided for @koreanKR_4900.
+  ///
+  /// In zh, this message translates to:
+  /// **'韩语 (韩国)'**
+  String get koreanKR_4900;
 }
 
 class _AppLocalizationsDelegate

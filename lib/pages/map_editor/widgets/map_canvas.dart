@@ -1428,7 +1428,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           ),
         );
         debugPrint(
-          LocalizationService.instance.current.futureBuilderData(snapshot.data ?? 'null'),
+          LocalizationService.instance.current.futureBuilderData(
+            snapshot.data ?? 'null',
+          ),
         );
         debugPrint(
           LocalizationService.instance.current.futureBuilderError(
@@ -3665,7 +3667,9 @@ class MapCanvasState extends State<MapCanvas> with TickerProviderStateMixin {
           note.isVisible,
         ),
       );
-      debugPrint('是否选中: $isSelectedNote'); // 便签在图层和图例之上显示，使用非常高的渲染顺序，确保始终在最上层
+      debugPrint(
+        '${LocalizationService.instance.current.isSelectedNote_7425}: \$isSelectedNote',
+      ); // ${LocalizationService.instance.current.noteLayerHint_8421}
       // 使用 1000000 + noteIndex 确保便签始终在所有其他元素之上
       final renderOrder = 1000000 + noteIndex;
 

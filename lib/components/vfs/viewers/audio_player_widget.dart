@@ -689,7 +689,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             },
             icon: const Icon(Icons.replay_10),
             iconSize: 28,
-            tooltip: '快退10秒',
+            tooltip:
+                LocalizationService.instance.current.fastRewind10Seconds_7281,
           ),
 
           // 播放/暂停
@@ -725,7 +726,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
             },
             icon: const Icon(Icons.forward_10),
             iconSize: 28,
-            tooltip: '快进10秒',
+            tooltip:
+                LocalizationService.instance.current.fastForward10Seconds_4821,
           ),
 
           // 下一首
@@ -919,7 +921,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   Widget _buildPlaybackModeButton() {
     return PopupMenuButton<PlaybackMode>(
       icon: Icon(_getPlaybackModeIcon()),
-      tooltip: '播放模式',
+      tooltip: LocalizationService.instance.current.playbackMode_1234,
       onSelected: _audioService.setPlaybackMode,
       itemBuilder: (context) => [
         PopupMenuItem(

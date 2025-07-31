@@ -231,7 +231,9 @@ class _UserPreferencesPageContentState
                         const SizedBox(height: 16),
                         Text(
                           LocalizationService.instance.current
-                              .loadUserPreferencesFailed(provider.error.toString()),
+                              .loadUserPreferencesFailed(
+                                provider.error.toString(),
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),

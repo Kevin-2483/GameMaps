@@ -1835,8 +1835,14 @@ class _LegendGroupManagementDrawerState
                 TextField(
                   controller: legendPathController,
                   decoration: InputDecoration(
-                    labelText: '图例路径 (.legend)',
-                    hintText: '选择或输入.legend文件路径',
+                    labelText: LocalizationService
+                        .instance
+                        .current
+                        .legendPathLabel_4821,
+                    hintText: LocalizationService
+                        .instance
+                        .current
+                        .legendPathHint_4821,
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder_open),
@@ -1878,8 +1884,14 @@ class _LegendGroupManagementDrawerState
                 TextField(
                   controller: urlController,
                   decoration: InputDecoration(
-                    labelText: '图例链接 (可选)',
-                    hintText: '输入网络链接或选择VFS文件',
+                    labelText: LocalizationService
+                        .instance
+                        .current
+                        .legendLinkOptional_4822,
+                    hintText: LocalizationService
+                        .instance
+                        .current
+                        .inputUrlOrSelectVfsFile_4823,
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.folder),

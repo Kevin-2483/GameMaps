@@ -112,7 +112,11 @@ class HtmlProcessor {
       );
       return result;
     } catch (e) {
-      debugPrint('🔧 HtmlProcessor.parseHtml: 解析失败 - $e');
+      debugPrint(
+        '🔧 HtmlProcessor.parseHtml: ' +
+            LocalizationService.instance.current.htmlParseFailed_7281 +
+            ' - \$e',
+      );
       onError?.call(e);
       return [TextNode(text: node.text)];
     }

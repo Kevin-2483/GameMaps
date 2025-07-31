@@ -249,6 +249,120 @@ class I18nProcessor:
         logger.info(f"成功加载 {len(records)} 个待处理记录")
         return records
     
+    def fix_json_escape_chars(self, json_content: str) -> str:
+        """修复JSON中的转义字符问题"""
+        import re
+        
+        try:
+            # 先尝试直接解析，如果成功就不需要修复
+            json.loads(json_content)
+            return json_content
+        except json.JSONDecodeError:
+            # 如果解析失败，进行修复
+            pass
+        
+        # 更简单但更有效的修复策略：
+        # 1. 替换常见的无效转义序列
+        # 2. 确保反斜杠被正确转义
+        
+        fixed_content = json_content
+        
+        # 修复常见的转义字符问题
+        # 将单独的反斜杠（后面不跟有效转义字符的）替换为双反斜杠
+        fixed_content = re.sub(r'\\(?!["\\nrtbf/u])', r'\\\\', fixed_content)
+        
+        # 修复字符串中未转义的双引号（在JSON字符串值内部）
+        # 这个正则表达式匹配在双引号字符串内部的未转义双引号
+        def fix_unescaped_quotes(match):
+            full_match = match.group(0)
+            # 如果字符串内部有未转义的双引号，进行转义
+            if '"' in full_match[1:-1]:  # 排除开始和结束的引号
+                content = full_match[1:-1]  # 获取字符串内容
+                content = content.replace('"', '\\"')  # 转义内部的双引号
+                return f'"{content}"'
+            return full_match
+        
+        # 匹配完整的JSON字符串值
+        fixed_content = re.sub(r'"[^"]*"', fix_unescaped_quotes, fixed_content)
+        
+        return fixed_content
+
+    def adjust_code_line_count(self, code: str, target_lines: int) -> str:
+        """调整代码的行数以匹配目标行数"""
+        current_lines = code.count('\n') + 1
+        
+        if current_lines == target_lines:
+            return code
+        
+        if current_lines < target_lines:
+            # 需要增加行数，在适当位置添加空行
+            lines = code.split('\n')
+            lines_to_add = target_lines - current_lines
+            
+            # 策略：在代码块之间、语句之后添加空行
+            # 优先在 ';' 后面、'{' 后面、'}' 前面添加空行
+            insert_positions = []
+            for i, line in enumerate(lines):
+                stripped = line.strip()
+                if (stripped.endswith(';') or 
+                    stripped.endswith('{') or 
+                    stripped.endswith('}') or
+                    stripped.startswith('//') or
+                    stripped == ''):
+                    insert_positions.append(i + 1)
+            
+            # 如果没有合适的位置，就在末尾添加
+            if not insert_positions:
+                insert_positions = [len(lines)]
+            
+            # 均匀分布要添加的空行
+            for i in range(lines_to_add):
+                pos_idx = i % len(insert_positions)
+                pos = insert_positions[pos_idx] + i // len(insert_positions)
+                lines.insert(min(pos, len(lines)), '')
+            
+            return '\n'.join(lines)
+        
+        else:
+            # 需要减少行数，移除空行或合并行
+            lines = code.split('\n')
+            lines_to_remove = current_lines - target_lines
+            
+            # 策略1：移除空行
+            empty_line_indices = [i for i, line in enumerate(lines) if line.strip() == '']
+            removed_count = 0
+            
+            for i in reversed(empty_line_indices):
+                if removed_count >= lines_to_remove:
+                    break
+                lines.pop(i)
+                removed_count += 1
+            
+            # 策略2：如果还需要移除更多行，尝试合并简单的语句
+            if removed_count < lines_to_remove:
+                remaining_to_remove = lines_to_remove - removed_count
+                
+                # 查找可以合并的行（简单语句，不是复杂的代码块）
+                for i in range(len(lines) - 1):
+                    if remaining_to_remove <= 0:
+                        break
+                    
+                    current_line = lines[i].strip()
+                    next_line = lines[i + 1].strip()
+                    
+                    # 只合并简单的语句，避免破坏代码结构
+                    if (current_line and next_line and 
+                        not current_line.endswith('{') and 
+                        not current_line.endswith('}') and
+                        not next_line.startswith('//') and
+                        len(current_line + ' ' + next_line) < 120):  # 避免行太长
+                        
+                        lines[i] = lines[i] + ' ' + lines[i + 1].strip()
+                        lines.pop(i + 1)
+                        remaining_to_remove -= 1
+            
+            return '\n'.join(lines)
+
     def create_ai_prompt(self, record: YamlRecord) -> str:
         """创建AI提示词"""
         # 读取l10n配置信息
@@ -393,7 +507,9 @@ ARB条目格式说明：
                                 
                                 # 解析AI返回的JSON
                                 try:
-                                    ai_data = json.loads(ai_content)
+                                    # 预处理AI返回的内容，修复转义字符问题
+                                    ai_content_fixed = self.fix_json_escape_chars(ai_content)
+                                    ai_data = json.loads(ai_content_fixed)
                                     
                                     # 验证必需字段
                                     if 'replaced_code' not in ai_data or 'arb_entries' not in ai_data:
@@ -406,8 +522,23 @@ ARB条目格式说明：
                                         
                                         if original_lines != replaced_lines:
                                             logger.warning(f"行数不匹配 {record.yaml_file}: 原始{original_lines}行 vs 替换{replaced_lines}行")
-                                            if abs(original_lines - replaced_lines) > 2:  # 允许小幅差异
-                                                raise ValueError(f"行数差异过大: {original_lines} vs {replaced_lines}")
+                                            
+                                            # 尝试调整行数
+                                            try:
+                                                adjusted_code = self.adjust_code_line_count(ai_data['replaced_code'], original_lines)
+                                                adjusted_lines = adjusted_code.count('\n') + 1
+                                                
+                                                if adjusted_lines == original_lines:
+                                                    logger.info(f"成功调整行数 {record.yaml_file}: {replaced_lines} -> {adjusted_lines}")
+                                                    ai_data['replaced_code'] = adjusted_code
+                                                else:
+                                                    logger.warning(f"行数调整失败 {record.yaml_file}: {replaced_lines} -> {adjusted_lines}，目标{original_lines}")
+                                                    if abs(original_lines - adjusted_lines) > 2:  # 允许小幅差异
+                                                        raise ValueError(f"行数差异过大: {original_lines} vs {adjusted_lines}")
+                                            except Exception as adjust_error:
+                                                logger.error(f"行数调整出错 {record.yaml_file}: {adjust_error}")
+                                                if abs(original_lines - replaced_lines) > 2:  # 允许小幅差异
+                                                    raise ValueError(f"行数差异过大且调整失败: {original_lines} vs {replaced_lines}")
                                     
                                     return AIResponse(
                                         replaced_code=ai_data['replaced_code'],

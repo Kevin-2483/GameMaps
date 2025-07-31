@@ -6,7 +6,7 @@ import 'services/websocket/websocket_client_manager.dart';
 import 'services/websocket/websocket_client_service.dart';
 import 'services/collaboration_state_manager.dart';
 import 'blocs/presence/presence_bloc.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 /// 全局协作服务

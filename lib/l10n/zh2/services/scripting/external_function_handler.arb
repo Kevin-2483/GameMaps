@@ -1,0 +1,9 @@
+{
+  "jsonParseError_7282": "Error parsing options JSON: {error}",
+  "voiceSynthesisLog_7283": "语音合成: \"{text}\"",
+  "languageLog_7284": ", language: {language}",
+  "speechRateLog_7285": ", rate: {rate}",
+  "volumeLog_7286": ", volume: {volume}",
+  "pitchLog_7287": ", pitch: {pitch}",
+  "voiceLog_7288": ", voice: {voice}"
+}

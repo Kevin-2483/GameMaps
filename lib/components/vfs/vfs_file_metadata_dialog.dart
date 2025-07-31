@@ -82,45 +82,51 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoSection('基本信息', [
-                      _buildInfoRow(
-                        LocalizationService.instance.current.nameLabel_4821,
-                        widget.fileInfo.name,
-                      ),
-                      _buildInfoRow(
-                        LocalizationService.instance.current.pathLabel_4821,
-                        widget.fileInfo.path,
-                      ),
-                      _buildInfoRow(
-                        LocalizationService.instance.current.typeLabel_5421,
-                        widget.fileInfo.isDirectory
-                            ? LocalizationService
-                                  .instance
-                                  .current
-                                  .folderType_5421
-                            : LocalizationService
-                                  .instance
-                                  .current
-                                  .fileType_5421,
-                      ),
-                      if (!widget.fileInfo.isDirectory)
+                    _buildInfoSection(
+                      LocalizationService.instance.current.basicInfo_4821,
+                      [
                         _buildInfoRow(
-                          LocalizationService.instance.current.fileSize_4821,
-                          _formatFileSize(widget.fileInfo.size),
+                          LocalizationService.instance.current.nameLabel_4821,
+                          widget.fileInfo.name,
                         ),
-                      _buildInfoRow(
-                        LocalizationService
-                            .instance
-                            .current
-                            .modifiedTimeLabel_4821,
-                        _formatDateTime(widget.fileInfo.modifiedAt),
-                      ),
-                      _buildInfoRow(
-                        LocalizationService.instance.current.creationTime_7281
-                            .toString(),
-                        _formatDateTime(widget.fileInfo.createdAt),
-                      ),
-                    ]),
+                        _buildInfoRow(
+                          LocalizationService.instance.current.pathLabel_4821,
+                          widget.fileInfo.path,
+                        ),
+                        _buildInfoRow(
+                          LocalizationService.instance.current.typeLabel_5421,
+                          widget.fileInfo.isDirectory
+                              ? LocalizationService
+                                    .instance
+                                    .current
+                                    .folderType_5421
+                              : LocalizationService
+                                    .instance
+                                    .current
+                                    .fileType_5421,
+                        ),
+                        if (!widget.fileInfo.isDirectory)
+                          _buildInfoRow(
+                            LocalizationService.instance.current.fileSize_4821,
+                            _formatFileSize(widget.fileInfo.size),
+                          ),
+                        _buildInfoRow(
+                          LocalizationService
+                              .instance
+                              .current
+                              .modifiedTimeLabel_4821,
+                          _formatDateTime(widget.fileInfo.modifiedAt),
+                        ),
+                        _buildInfoRow(
+                          LocalizationService
+                              .instance
+                              .current
+                              .creationTime_7281,
+                          _formatDateTime(widget.fileInfo.createdAt),
+                        ),
+                      ],
+                    ),
+
                     const SizedBox(height: 16),
                     if (widget.fileInfo.metadata != null &&
                         widget.fileInfo.metadata!.isNotEmpty) ...[
@@ -134,19 +140,22 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
                       const SizedBox(height: 16),
                     ],
                     if (!widget.fileInfo.isDirectory) ...[
-                      _buildInfoSection('文件详情', [
-                        _buildInfoRow(
-                          LocalizationService
-                              .instance
-                              .current
-                              .mimeTypeLabel_4721,
-                          widget.fileInfo.mimeType ??
-                              LocalizationService
-                                  .instance
-                                  .current
-                                  .unknownLabel_4721,
-                        ),
-                      ]),
+                      _buildInfoSection(
+                        LocalizationService.instance.current.fileDetails_4722,
+                        [
+                          _buildInfoRow(
+                            LocalizationService
+                                .instance
+                                .current
+                                .mimeTypeLabel_4721,
+                            widget.fileInfo.mimeType ??
+                                LocalizationService
+                                    .instance
+                                    .current
+                                    .unknownLabel_4721,
+                          ),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -279,7 +288,7 @@ class _VfsFileMetadataDialogState extends State<VfsFileMetadataDialog> {
       LocalizationService.instance.current.filePathLabel(widget.fileInfo.path),
     );
     buffer.writeln(
-      '类型: ${widget.fileInfo.isDirectory ? LocalizationService.instance.current.folderType_4821 : LocalizationService.instance.current.fileType_4821}',
+      '${LocalizationService.instance.current.typeLabel_5421}: ${widget.fileInfo.isDirectory ? LocalizationService.instance.current.folderType_4821 : LocalizationService.instance.current.fileType_4821}',
     );
 
     if (!widget.fileInfo.isDirectory) {

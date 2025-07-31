@@ -355,7 +355,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         widget.preferences.avatarPath!.isNotEmpty) {
       return widget.preferences.avatarPath!;
     }
-    return '未设置';
+    return LocalizationService.instance.current.notSet_8921;
   }
 
   void _changeDisplayName(
@@ -620,9 +620,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         children: [
           if (config.description.isNotEmpty) Text(config.description),
           Text(
-            LocalizationService.instance.current.creationTime_7281(
-              _formatDateTime(config.createdAt),
-            ),
+            '${LocalizationService.instance.current.creationTime_7281}: ${_formatDateTime(config.createdAt)}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],

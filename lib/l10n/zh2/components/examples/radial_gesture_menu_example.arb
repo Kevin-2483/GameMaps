@@ -1,0 +1,16 @@
+{
+  "mergeLayers_7281": "合并图层",
+  "layerGroup_7281": "图层组",
+  "createGroup_4821": "创建组",
+  "createLayerGroup_7532": "创建图层组",
+  "ungroupAction_4821": "取消分组",
+  "renameGroup_4821": "重命名组",
+  "renameLayerGroup_7539": "重命名图层组",
+  "voiceNoteLabel_7281": "语音便签",
+  "deleteNoteLabel_4821": "删除便签",
+  "radialMenuInstructions_7281": "1. 按住中键或触摸板双指按下调起菜单\n2. 拖动到菜单项上会自动进入子菜单\n3. 拖回中心区域返回主菜单\n4. 松开鼠标/手指执行选择的动作\n5. 开启调试模式可以看到连线和角度信息",
+  "largeBrush_4821": "大画笔",
+  "eraserTool_4821": "橡皮擦",
+  "createNewLayer_4821": "新建图层",
+  "duplicateLayer_4821": "复制图层"
+}

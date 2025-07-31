@@ -80,7 +80,9 @@ class ImageUtils {
       if (e is Exception) {
         rethrow;
       } else {
-        throw Exception('选择图片时发生错误: $e');
+        throw Exception(
+          LocalizationService.instance.current.imageSelectionError_4829(e),
+        );
       }
     }
   }

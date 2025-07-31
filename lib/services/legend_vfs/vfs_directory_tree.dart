@@ -162,7 +162,7 @@ class VfsDirectoryTreeManager extends ChangeNotifier {
           .split('/')
           .where((s) => s.isNotEmpty)
           .toList();
-      
+
       debugPrint(
         LocalizationService.instance.current.vfsDirectoryTreeProcessingPath(
           folderPath,

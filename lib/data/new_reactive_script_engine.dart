@@ -468,7 +468,9 @@ class NewReactiveScriptEngine {
 
     // 同时清理对应的函数处理器
     if (_functionHandlerPool.containsKey(scriptId)) {
-      debugPrint('清理脚本函数处理器: $scriptId');
+      debugPrint(
+        LocalizationService.instance.current.cleanScriptHandler_7421(scriptId),
+      );
       _functionHandlerPool.remove(scriptId);
     }
   }

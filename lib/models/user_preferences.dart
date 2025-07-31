@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
-import '../l10n/app_localizations.dart';
+
 import '../services/localization_service.dart';
 
 part 'user_preferences.g.dart';

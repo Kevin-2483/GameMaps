@@ -175,7 +175,7 @@ class FloatingWindowExamples extends StatelessWidget {
   void _showBasicFloatingWindow(BuildContext context) {
     FloatingWindow.show(
       context,
-      title: '基础浮动窗口',
+      title: LocalizationService.instance.current.basicFloatingWindow_4821,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -236,8 +236,8 @@ class FloatingWindowExamples extends StatelessWidget {
   void _showFloatingWindowWithIcon(BuildContext context) {
     FloatingWindow.show(
       context,
-      title: '设置管理',
-      subtitle: '配置应用程序设置和首选项',
+      title: LocalizationService.instance.current.settingsManagement_4821,
+      subtitle: LocalizationService.instance.current.configureAppSettings_7285,
       icon: Icons.settings,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -305,7 +305,7 @@ class FloatingWindowExamples extends StatelessWidget {
   void _showCustomSizeFloatingWindow(BuildContext context) {
     FloatingWindow.show(
       context,
-      title: '小型对话框',
+      title: LocalizationService.instance.current.smallDialogTitle_4821,
       icon: Icons.info,
       widthRatio: 0.6, // 60%宽度
       heightRatio: 0.4, // 40%高度
@@ -353,7 +353,7 @@ class FloatingWindowExamples extends StatelessWidget {
               ),
             );
           },
-          tooltip: '刷新',
+          tooltip: LocalizationService.instance.current.refresh_4821,
         ),
         IconButton(
           icon: const Icon(Icons.settings),
@@ -366,7 +366,7 @@ class FloatingWindowExamples extends StatelessWidget {
               ),
             );
           },
-          tooltip: '设置',
+          tooltip: LocalizationService.instance.current.settings_7281,
         ),
       ],
       child: Padding(
@@ -419,8 +419,8 @@ class FloatingWindowExamples extends StatelessWidget {
   void _showDraggableFloatingWindow(BuildContext context) {
     FloatingWindow.show(
       context,
-      title: '可拖拽窗口',
-      subtitle: '拖拽标题栏可移动窗口',
+      title: LocalizationService.instance.current.draggableWindowTitle_4521,
+      subtitle: LocalizationService.instance.current.windowDragHint_4821,
       icon: Icons.open_with,
       draggable: true,
       widthRatio: 0.7,
@@ -564,7 +564,7 @@ class FloatingWindowExamples extends StatelessWidget {
   /// 使用扩展方法的浮动窗口
   void _showFloatingWindowWithExtension(BuildContext context) {
     context.showFloatingWindow(
-      title: '扩展方法窗口',
+      title: LocalizationService.instance.current.extensionWindowTitle_7281,
       icon: Icons.extension,
       child: Padding(
         padding: const EdgeInsets.all(16.0),

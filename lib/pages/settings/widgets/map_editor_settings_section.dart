@@ -20,108 +20,120 @@ class MapEditorSettingsSection extends StatelessWidget {
   String _getShortcutDisplayName(String shortcut) {
     switch (shortcut) {
       case 'prevLayer':
-        return '选择上一个图层';
+        return LocalizationService.instance.current.selectPreviousLayer_3821;
       case 'nextLayer':
-        return '选择下一个图层';
+        return LocalizationService.instance.current.selectNextLayer_3822;
       case 'prevLayerGroup':
-        return '选择上一个图层组';
+        return LocalizationService
+            .instance
+            .current
+            .selectPreviousLayerGroup_3823;
       case 'nextLayerGroup':
-        return '选择下一个图层组';
+        return LocalizationService.instance.current.selectNextLayerGroup_3824;
       case 'prevLegendGroup':
-        return '打开上一个图例组';
+        return LocalizationService
+            .instance
+            .current
+            .openPreviousLegendGroup_3825;
       case 'nextLegendGroup':
-        return '打开下一个图例组';
+        return LocalizationService.instance.current.openNextLegendGroup_3826;
       case 'openLegendDrawer':
-        return '打开图例组绑定抽屉';
+        return LocalizationService.instance.current.openLegendGroupDrawer_3827;
       case 'clearLayerSelection':
-        return '清除图层/图层组选择';
+        return LocalizationService.instance.current.clearLayerSelection_3828;
       // 工具快捷键
       case 'undo':
-        return '撤销';
+        return LocalizationService.instance.current.undo_3829;
       case 'redo':
-        return '重做';
+        return LocalizationService.instance.current.redo_3830;
       case 'save':
-        return '保存';
+        return LocalizationService.instance.current.save_3831;
       case 'copy':
-        return '复制';
+        return LocalizationService.instance.current.copy_3832;
       case 'paste':
-        return '粘贴';
+        return LocalizationService.instance.current.paste_3833;
       case 'delete':
-        return '删除';
+        return LocalizationService.instance.current.delete_3834;
       // 图层组选择快捷键
       case 'selectLayerGroup1':
-        return '选择图层组 1';
+        return LocalizationService.instance.current.selectLayerGroup1_3835;
       case 'selectLayerGroup2':
-        return '选择图层组 2';
+        return LocalizationService.instance.current.selectLayerGroup2_3836;
       case 'selectLayerGroup3':
-        return '选择图层组 3';
+        return LocalizationService.instance.current.selectLayerGroup3_3837;
       case 'selectLayerGroup4':
-        return '选择图层组 4';
+        return LocalizationService.instance.current.selectLayerGroup4_3838;
       case 'selectLayerGroup5':
-        return '选择图层组 5';
+        return LocalizationService.instance.current.selectLayerGroup5_3839;
       case 'selectLayerGroup6':
-        return '选择图层组 6';
+        return LocalizationService.instance.current.selectLayerGroup6_3840;
       case 'selectLayerGroup7':
-        return '选择图层组 7';
+        return LocalizationService.instance.current.selectLayerGroup7_3841;
       case 'selectLayerGroup8':
-        return '选择图层组 8';
+        return LocalizationService.instance.current.selectLayerGroup8_3842;
       case 'selectLayerGroup9':
-        return '选择图层组 9';
+        return LocalizationService.instance.current.selectLayerGroup9_3843;
       case 'selectLayerGroup10':
-        return '选择图层组 10';
+        return LocalizationService.instance.current.selectLayerGroup10_3844;
       // 图层选择快捷键
       case 'selectLayer1':
-        return '选择图层 1';
+        return LocalizationService.instance.current.selectLayer1_3845;
       case 'selectLayer2':
-        return '选择图层 2';
+        return LocalizationService.instance.current.selectLayer2_3846;
       case 'selectLayer3':
-        return '选择图层 3';
+        return LocalizationService.instance.current.selectLayer3_3847;
       case 'selectLayer4':
-        return '选择图层 4';
+        return LocalizationService.instance.current.selectLayer4_3848;
       case 'selectLayer5':
-        return '选择图层 5';
+        return LocalizationService.instance.current.selectLayer5_3849;
       case 'selectLayer6':
-        return '选择图层 6';
+        return LocalizationService.instance.current.selectLayer6_3850;
       case 'selectLayer7':
-        return '选择图层 7';
+        return LocalizationService.instance.current.selectLayer7_3851;
       case 'selectLayer8':
-        return '选择图层 8';
+        return LocalizationService.instance.current.selectLayer8_3852;
       case 'selectLayer9':
-        return '选择图层 9';
+        return LocalizationService.instance.current.selectLayer9_3853;
       case 'selectLayer10':
-        return '选择图层 10';
+        return LocalizationService.instance.current.selectLayer10_3854;
       case 'selectLayer11':
-        return '选择图层 11';
+        return LocalizationService.instance.current.selectLayer11_3855;
       case 'selectLayer12':
-        return '选择图层 12';
+        return LocalizationService.instance.current.selectLayer12_3856;
       // 新增的快捷键功能
       case 'toggleSidebar':
-        return '切换左侧边栏';
+        return LocalizationService.instance.current.toggleLeftSidebar_3857;
       case 'openZInspector':
-        return '打开Z元素检视器';
+        return LocalizationService.instance.current.openZElementInspector_3858;
       case 'toggleLegendGroupDrawer':
-        return '切换图例管理抽屉';
+        return LocalizationService
+            .instance
+            .current
+            .toggleLegendManagementDrawer_3859;
       case 'hideOtherLayers':
-        return '隐藏其他图层';
+        return LocalizationService.instance.current.hideOtherLayers_3860;
       case 'hideOtherLayerGroups':
-        return '隐藏其他图层组';
+        return LocalizationService.instance.current.hideOtherLayerGroups_3861;
       case 'showCurrentLayer':
-        return '显示当前图层';
+        return LocalizationService.instance.current.showCurrentLayer_3862;
       case 'showCurrentLayerGroup':
-        return '显示当前图层组';
+        return LocalizationService.instance.current.showCurrentLayerGroup_3863;
       case 'hideOtherLegendGroups':
-        return '隐藏其他图例组';
+        return LocalizationService.instance.current.hideOtherLegendGroups_3864;
       case 'showCurrentLegendGroup':
-        return '显示当前图例组';
+        return LocalizationService.instance.current.showCurrentLegendGroup_3865;
       case 'showShortcuts':
-        return '显示快捷键列表';
+        return LocalizationService.instance.current.showShortcutList_3866;
       // 版本管理快捷键
       case 'prevVersion':
-        return '切换到上一个版本';
+        return LocalizationService
+            .instance
+            .current
+            .switchToPreviousVersion_3867;
       case 'nextVersion':
-        return '切换到下一个版本';
+        return LocalizationService.instance.current.switchToNextVersion_3868;
       case 'createNewVersion':
-        return '新增版本';
+        return LocalizationService.instance.current.createNewVersion_3869;
       default:
         return shortcut;
     }

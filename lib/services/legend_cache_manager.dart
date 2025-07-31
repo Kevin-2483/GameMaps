@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../models/legend_item.dart' as legend_db;
 import 'legend_vfs/legend_vfs_service.dart';
 import 'dart:async';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 图例缓存状态

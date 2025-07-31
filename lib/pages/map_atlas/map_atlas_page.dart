@@ -737,7 +737,10 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
             }
           } catch (e) {
             debugPrint(
-              LocalizationService.instance.current.mapSummaryLoadFailed(mapName, e.toString()),
+              LocalizationService.instance.current.mapSummaryLoadFailed(
+                mapName,
+                e.toString(),
+              ),
             );
             // 创建基本的MapItemSummary作为回退
             final mapSummary = MapItemSummary(
@@ -1117,7 +1120,7 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
         _showErrorSnackBar(l10n.deleteMapFailed(e.toString()));
       }
     }
-  }  
+  }
   // Future<void> _uploadLocalizationFile() async {
   //   try {
   //     final success = await localizationService.importLocalizationFile();
@@ -1148,10 +1151,6 @@ class _MapAtlasContentState extends State<_MapAtlasContent>
   //     );
   //   }
   // }
-
-
-
-
 
   void _openMapEditorWithPath(String mapTitle, String itemPath) async {
     debugPrint(
@@ -1955,8 +1954,7 @@ class _MapCard extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               onSecondaryTapDown: (details) {
-                if (onRename != null ||
-                    onUpdateCover != null) {
+                if (onRename != null || onUpdateCover != null) {
                   _showMapContextMenu(context, details.globalPosition);
                 }
               },
@@ -1965,7 +1963,9 @@ class _MapCard extends StatelessWidget {
                 child: map.imageData != null
                     ? Image.memory(map.imageData!, fit: BoxFit.cover)
                     : Container(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.image_not_supported,
                           size: 48,
@@ -2041,12 +2041,12 @@ class _MapCard extends StatelessWidget {
           value: 'delete',
           child: const Row(
             children: [
-                Icon(Icons.delete, size: 16, color: Colors.red),
-                SizedBox(width: 8),
-                Text('删除', style: TextStyle(color: Colors.red)),
-              ],
-            ),
+              Icon(Icons.delete, size: 16, color: Colors.red),
+              SizedBox(width: 8),
+              Text('删除', style: TextStyle(color: Colors.red)),
+            ],
           ),
+        ),
       ],
     ).then((value) {
       switch (value) {

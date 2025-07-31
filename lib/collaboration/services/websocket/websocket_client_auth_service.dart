@@ -279,8 +279,16 @@ class WebSocketClientAuthService {
 
               case 'auth_failed':
                 final reason = message.data is Map<String, dynamic>
-                    ? message.data['reason'] as String? ?? '未知原因'
-                    : message.data as String? ?? '未知原因';
+                    ? message.data['reason'] as String? ??
+                          LocalizationService
+                              .instance
+                              .current
+                              .unknownReason_7421
+                    : message.data as String? ??
+                          LocalizationService
+                              .instance
+                              .current
+                              .unknownReason_7421;
                 if (kDebugMode) {
                   debugPrint(
                     LocalizationService.instance.current.authenticationFailed(
@@ -294,8 +302,13 @@ class WebSocketClientAuthService {
 
               case 'error':
                 final error = message.data is Map<String, dynamic>
-                    ? message.data['message'] as String? ?? '未知错误'
-                    : message.data as String? ?? '未知错误';
+                    ? message.data['message'] as String? ??
+                          LocalizationService.instance.current.unknownError_7421
+                    : message.data as String? ??
+                          LocalizationService
+                              .instance
+                              .current
+                              .unknownError_7421;
                 if (kDebugMode) {
                   debugPrint(
                     LocalizationService.instance.current.serverErrorResponse(

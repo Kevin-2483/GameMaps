@@ -574,7 +574,8 @@ class _ScriptStatusMonitorState extends State<ScriptStatusMonitor>
 
   /// 格式化时间
   String _formatTime(DateTime? dateTime) {
-    if (dateTime == null) return '未知';
+    if (dateTime == null)
+      return LocalizationService.instance.current.unknownTime_4821;
 
     final now = DateTime.now();
     final diff = now.difference(dateTime);

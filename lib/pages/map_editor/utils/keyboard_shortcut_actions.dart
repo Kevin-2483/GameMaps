@@ -923,7 +923,8 @@ class KeyboardShortcutActions {
     final now = DateTime.now();
     final timestamp =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-    final versionName = '快捷键版本_$timestamp';
+    final versionName =
+        '${LocalizationService.instance.current.shortcutVersion_4821}_$timestamp';
 
     createVersion(versionName).catchError((error) {
       if (context.mounted) {

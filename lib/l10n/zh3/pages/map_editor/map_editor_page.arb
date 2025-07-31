@@ -1,0 +1,10 @@
+{
+  "drawingToolsTitle_4722": "绘制工具",
+  "noVisibleLayersDisabled_4723": "无可见图层，绘制工具已禁用",
+  "drawToStickyNote_4724": "绘制到便签: {title}",
+  "drawToLayer_4725": "绘制到: {name}",
+  "drawToDefaultLayer_4726": "绘制到: {name} (默认最上层)",
+  "selectedLayerGroup_4727": "选中图层组 ({count} 个图层)",
+  "noToolSelected_4728": "未选择工具",
+  "noAvailableLayers_4721": "无可用图层"
+}

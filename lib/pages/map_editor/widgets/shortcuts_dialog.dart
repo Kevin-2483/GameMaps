@@ -25,7 +25,7 @@ class ShortcutsDialog extends StatelessWidget {
         children: [
           Icon(Icons.keyboard, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
-Text(LocalizationService.instance.current.shortcutList_4821),
+          Text(LocalizationService.instance.current.shortcutList_4821),
         ],
       ),
       content: SizedBox(
@@ -36,13 +36,14 @@ Text(LocalizationService.instance.current.shortcutList_4821),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 基本操作
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.basicOperations_4821,
                 {
                   'undo': LocalizationService.instance.current.undo_4822,
                   'redo': LocalizationService.instance.current.redo_4823,
                   'save': LocalizationService.instance.current.save_4824,
-                  'clearLayerSelection': LocalizationService.instance.current.clearSelection_4825,
+                  'clearLayerSelection':
+                      LocalizationService.instance.current.clearSelection_4825,
                 },
                 shortcuts,
                 context,
@@ -50,12 +51,17 @@ _buildShortcutCategory(
               const SizedBox(height: 16),
 
               // 界面控制
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.uiControl_4821,
                 {
-                  'toggleSidebar': LocalizationService.instance.current.toggleSidebar_4822,
-                  'openZInspector': LocalizationService.instance.current.openZInspector_4823,
-                  'toggleLegendGroupDrawer': LocalizationService.instance.current.toggleLegendGroupDrawer_4824,
+                  'toggleSidebar':
+                      LocalizationService.instance.current.toggleSidebar_4822,
+                  'openZInspector':
+                      LocalizationService.instance.current.openZInspector_4823,
+                  'toggleLegendGroupDrawer': LocalizationService
+                      .instance
+                      .current
+                      .toggleLegendGroupDrawer_4824,
                 },
                 shortcuts,
                 context,
@@ -63,17 +69,33 @@ _buildShortcutCategory(
               const SizedBox(height: 16),
 
               // 图层操作
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.layerOperations_4821,
                 {
-                  'prevLayer': LocalizationService.instance.current.previousLayer_4822,
-                  'nextLayer': LocalizationService.instance.current.nextLayer_4823,
-                  'prevLayerGroup': LocalizationService.instance.current.previousLayerGroup_4824,
-                  'nextLayerGroup': LocalizationService.instance.current.nextLayerGroup_4825,
-                  'hideOtherLayers': LocalizationService.instance.current.hideOtherLayers_4826,
-                  'hideOtherLayerGroups': LocalizationService.instance.current.hideOtherLayerGroups_4827,
-                  'showCurrentLayer': LocalizationService.instance.current.showCurrentLayer_4828,
-                  'showCurrentLayerGroup': LocalizationService.instance.current.showCurrentLayerGroup_4829,
+                  'prevLayer':
+                      LocalizationService.instance.current.previousLayer_4822,
+                  'nextLayer':
+                      LocalizationService.instance.current.nextLayer_4823,
+                  'prevLayerGroup': LocalizationService
+                      .instance
+                      .current
+                      .previousLayerGroup_4824,
+                  'nextLayerGroup':
+                      LocalizationService.instance.current.nextLayerGroup_4825,
+                  'hideOtherLayers':
+                      LocalizationService.instance.current.hideOtherLayers_4826,
+                  'hideOtherLayerGroups': LocalizationService
+                      .instance
+                      .current
+                      .hideOtherLayerGroups_4827,
+                  'showCurrentLayer': LocalizationService
+                      .instance
+                      .current
+                      .showCurrentLayer_4828,
+                  'showCurrentLayerGroup': LocalizationService
+                      .instance
+                      .current
+                      .showCurrentLayerGroup_4829,
                 },
                 shortcuts,
                 context,
@@ -81,33 +103,56 @@ _buildShortcutCategory(
               const SizedBox(height: 16),
 
               // 图例操作
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.legendOperations_4821,
                 {
-                  'prevLegendGroup': LocalizationService.instance.current.previousLegendGroup_4822,
-                  'nextLegendGroup': LocalizationService.instance.current.nextLegendGroup_4823,
-                  'openLegendDrawer': LocalizationService.instance.current.openLegendDrawer_4824,
-                  'hideOtherLegendGroups': LocalizationService.instance.current.hideOtherLegendGroups_4825,
-                  'showCurrentLegendGroup': LocalizationService.instance.current.showCurrentLegendGroup_4826,
+                  'prevLegendGroup': LocalizationService
+                      .instance
+                      .current
+                      .previousLegendGroup_4822,
+                  'nextLegendGroup':
+                      LocalizationService.instance.current.nextLegendGroup_4823,
+                  'openLegendDrawer': LocalizationService
+                      .instance
+                      .current
+                      .openLegendDrawer_4824,
+                  'hideOtherLegendGroups': LocalizationService
+                      .instance
+                      .current
+                      .hideOtherLegendGroups_4825,
+                  'showCurrentLegendGroup': LocalizationService
+                      .instance
+                      .current
+                      .showCurrentLegendGroup_4826,
                 },
                 shortcuts,
                 context,
               ),
               _buildShortcutCategory(
-                '帮助',
-                {'showShortcuts': LocalizationService.instance.current.showShortcutsList_7281},
+                LocalizationService.instance.current.help_7282,
+                {
+                  'showShortcuts': LocalizationService
+                      .instance
+                      .current
+                      .showShortcutsList_7281,
+                },
                 shortcuts,
                 context,
               ),
               const SizedBox(height: 16),
 
               // 版本管理
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.versionManagement_4821,
                 {
-                  'prevVersion': LocalizationService.instance.current.previousVersion_4822,
-                  'nextVersion': LocalizationService.instance.current.nextVersion_4823,
-                  'createNewVersion': LocalizationService.instance.current.createNewVersion_4824,
+                  'prevVersion':
+                      LocalizationService.instance.current.previousVersion_4822,
+                  'nextVersion':
+                      LocalizationService.instance.current.nextVersion_4823,
+                  'createNewVersion': LocalizationService
+                      .instance
+                      .current
+                      .createNewVersion_4824,
                 },
                 shortcuts,
                 context,
@@ -115,19 +160,29 @@ _buildShortcutCategory(
               const SizedBox(height: 16),
 
               // 快速选择
-_buildShortcutCategory(
+              _buildShortcutCategory(
                 LocalizationService.instance.current.quickSelectLayerGroup,
                 {
-                  'selectLayerGroup1': LocalizationService.instance.current.selectLayerGroup1,
-                  'selectLayerGroup2': LocalizationService.instance.current.selectLayerGroup2,
-                  'selectLayerGroup3': LocalizationService.instance.current.selectLayerGroup3,
-                  'selectLayerGroup4': LocalizationService.instance.current.selectLayerGroup4,
-                  'selectLayerGroup5': LocalizationService.instance.current.selectLayerGroup5,
-                  'selectLayerGroup6': LocalizationService.instance.current.selectLayerGroup6,
-                  'selectLayerGroup7': LocalizationService.instance.current.selectLayerGroup7,
-                  'selectLayerGroup8': LocalizationService.instance.current.selectLayerGroup8,
-                  'selectLayerGroup9': LocalizationService.instance.current.selectLayerGroup9,
-                  'selectLayerGroup10': LocalizationService.instance.current.selectLayerGroup10,
+                  'selectLayerGroup1':
+                      LocalizationService.instance.current.selectLayerGroup1,
+                  'selectLayerGroup2':
+                      LocalizationService.instance.current.selectLayerGroup2,
+                  'selectLayerGroup3':
+                      LocalizationService.instance.current.selectLayerGroup3,
+                  'selectLayerGroup4':
+                      LocalizationService.instance.current.selectLayerGroup4,
+                  'selectLayerGroup5':
+                      LocalizationService.instance.current.selectLayerGroup5,
+                  'selectLayerGroup6':
+                      LocalizationService.instance.current.selectLayerGroup6,
+                  'selectLayerGroup7':
+                      LocalizationService.instance.current.selectLayerGroup7,
+                  'selectLayerGroup8':
+                      LocalizationService.instance.current.selectLayerGroup8,
+                  'selectLayerGroup9':
+                      LocalizationService.instance.current.selectLayerGroup9,
+                  'selectLayerGroup10':
+                      LocalizationService.instance.current.selectLayerGroup10,
                 },
                 shortcuts,
                 context,
@@ -135,21 +190,36 @@ _buildShortcutCategory(
               const SizedBox(height: 16),
 
               // 快速选择图层
-_buildShortcutCategory(
-                LocalizationService.instance.current.quickSelectLayerCategory_4821,
+              _buildShortcutCategory(
+                LocalizationService
+                    .instance
+                    .current
+                    .quickSelectLayerCategory_4821,
                 {
-                  'selectLayer1': LocalizationService.instance.current.selectLayer1_4822,
-                  'selectLayer2': LocalizationService.instance.current.selectLayer2_4823,
-                  'selectLayer3': LocalizationService.instance.current.selectLayer3_4824,
-                  'selectLayer4': LocalizationService.instance.current.selectLayer4_4825,
-                  'selectLayer5': LocalizationService.instance.current.selectLayer5_4826,
-                  'selectLayer6': LocalizationService.instance.current.selectLayer6_4827,
-                  'selectLayer7': LocalizationService.instance.current.selectLayer7_4828,
-                  'selectLayer8': LocalizationService.instance.current.selectLayer8_4829,
-                  'selectLayer9': LocalizationService.instance.current.selectLayer9_4830,
-                  'selectLayer10': LocalizationService.instance.current.selectLayer10_4831,
-                  'selectLayer11': LocalizationService.instance.current.selectLayer11_4832,
-                  'selectLayer12': LocalizationService.instance.current.selectLayer12_4833,
+                  'selectLayer1':
+                      LocalizationService.instance.current.selectLayer1_4822,
+                  'selectLayer2':
+                      LocalizationService.instance.current.selectLayer2_4823,
+                  'selectLayer3':
+                      LocalizationService.instance.current.selectLayer3_4824,
+                  'selectLayer4':
+                      LocalizationService.instance.current.selectLayer4_4825,
+                  'selectLayer5':
+                      LocalizationService.instance.current.selectLayer5_4826,
+                  'selectLayer6':
+                      LocalizationService.instance.current.selectLayer6_4827,
+                  'selectLayer7':
+                      LocalizationService.instance.current.selectLayer7_4828,
+                  'selectLayer8':
+                      LocalizationService.instance.current.selectLayer8_4829,
+                  'selectLayer9':
+                      LocalizationService.instance.current.selectLayer9_4830,
+                  'selectLayer10':
+                      LocalizationService.instance.current.selectLayer10_4831,
+                  'selectLayer11':
+                      LocalizationService.instance.current.selectLayer11_4832,
+                  'selectLayer12':
+                      LocalizationService.instance.current.selectLayer12_4833,
                 },
                 shortcuts,
                 context,
@@ -161,7 +231,7 @@ _buildShortcutCategory(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-child: Text(LocalizationService.instance.current.closeButton_7421),
+          child: Text(LocalizationService.instance.current.closeButton_7421),
         ),
       ],
     );
@@ -223,7 +293,7 @@ child: Text(LocalizationService.instance.current.closeButton_7421),
   /// 构建快捷键芯片（使用与设置页面相同的样式）
   Widget _buildShortcutChips(List<String> shortcuts, BuildContext context) {
     if (shortcuts.isEmpty) {
-return Text(
+      return Text(
         LocalizationService.instance.current.notSet_7281,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurfaceVariant,

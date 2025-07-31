@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:async';
 import '../providers/user_preferences_provider.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// 窗口管理服务

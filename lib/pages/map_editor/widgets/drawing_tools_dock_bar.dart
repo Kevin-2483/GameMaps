@@ -1340,10 +1340,10 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
               ),
               const SizedBox(height: 4),
               Text(
-                '1. 点击"上传图片"选择文件或"剪贴板"粘贴图片\n'
-                '2. 在画布上拖拽创建选区\n'
-                '3. 图片将自动适应选区大小\n'
-                '4. 可通过Z层级检视器调整',
+                LocalizationService
+                    .instance
+                    .current
+                    .imageProcessingInstructions_4821,
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(
@@ -1468,7 +1468,8 @@ class _DrawingToolsDockBarState extends State<DrawingToolsDockBar> {
     final buttonKey = _toolButtonKeys[toolConfig.type]!;
 
     return Tooltip(
-      message: '${toolConfig.tooltip}\n右键查看属性',
+      message:
+          '${toolConfig.tooltip}\n${LocalizationService.instance.current.rightClickToViewProperties_7421}',
       waitDuration: const Duration(milliseconds: 500),
       child: Container(
         key: buttonKey,

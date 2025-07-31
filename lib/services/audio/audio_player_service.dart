@@ -341,7 +341,10 @@ class AudioPlayerService extends ChangeNotifier {
         );
         return true;
       } catch (e) {
-        debugPrint('🎵 AudioPlayerService: 临时队列播放失败 - $e');
+        debugPrint(
+          '🎵 AudioPlayerService: ' +
+              LocalizationService.instance.current.tempQueuePlayFailed_4829(e),
+        );
         _setError(
           LocalizationService.instance.current
               .temporaryQueuePlaybackFailed_4829(e),
@@ -382,7 +385,10 @@ class AudioPlayerService extends ChangeNotifier {
       );
       return true;
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 播放失败 - $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.playbackFailed_4821(e),
+      );
       _setError(LocalizationService.instance.current.playbackFailed_7285(e));
       return false;
     }
@@ -402,7 +408,11 @@ class AudioPlayerService extends ChangeNotifier {
       );
       debugPrint(LocalizationService.instance.current.audioPlayerPaused_7281);
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 暂停失败 - $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.pauseFailed_7281 +
+            ' - \$e',
+      );
       _setError(LocalizationService.instance.current.pauseFailed_7285(e));
     }
   }
@@ -527,7 +537,10 @@ class AudioPlayerService extends ChangeNotifier {
             LocalizationService.instance.current.audioBalanceSet_7421(_balance),
       );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 设置音频平衡失败 - $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.setAudioBalanceFailed_4821(e),
+      );
       _setError(LocalizationService.instance.current.audioBalanceError_4821(e));
     }
   }
@@ -551,7 +564,11 @@ class AudioPlayerService extends ChangeNotifier {
         '🎵 AudioPlayerService: ${_muted ? LocalizationService.instance.current.mutedStatusOn : LocalizationService.instance.current.mutedStatusOff}',
       );
     } catch (e) {
-      debugPrint('🎵 AudioPlayerService: 切换静音失败 - $e');
+      debugPrint(
+        '🎵 AudioPlayerService: ' +
+            LocalizationService.instance.current.muteToggleFailed_7281 +
+            ' - \$e',
+      );
       _setError(LocalizationService.instance.current.toggleMuteFailed_7284(e));
     }
   }
@@ -726,7 +743,9 @@ class AudioPlayerService extends ChangeNotifier {
       );
       final playableUrl = await _vfsService.generateFileUrl(source);
       if (playableUrl == null) {
-        throw Exception('无法从VFS获取音频文件');
+        throw Exception(
+          LocalizationService.instance.current.failedToGetAudioFile_4821,
+        );
       }
 
       debugPrint(

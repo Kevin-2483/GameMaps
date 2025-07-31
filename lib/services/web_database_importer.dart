@@ -8,7 +8,7 @@ import '../models/legend_item.dart';
 // import '../services/map_database_service.dart';
 import '../services/vfs_map_storage/vfs_map_service_factory.dart';
 import 'legend_vfs/legend_compatibility_service.dart';
-import '../l10n/app_localizations.dart';
+
 import 'localization_service.dart';
 
 /// Web平台数据库导入工具
@@ -35,7 +35,11 @@ class WebDatabaseImporter {
         LocalizationService.instance.current.webDatabaseImportComplete_4821,
       );
     } catch (e) {
-      debugPrint('WebDatabaseImporter: 导入失败 - $e');
+      debugPrint(
+        'WebDatabaseImporter: ' +
+            LocalizationService.instance.current.importFailed_7281 +
+            ' - \$e',
+      );
       // 如果没有导出数据，使用示例数据
       await _createSampleData();
     }
@@ -68,7 +72,11 @@ class WebDatabaseImporter {
                   ),
             );
           } catch (e) {
-            debugPrint('WebDatabaseImporter: 导入地图失败 - $e');
+            debugPrint(
+              'WebDatabaseImporter: ' +
+                  LocalizationService.instance.current.mapImportFailed_4728 +
+                  ' - \$e',
+            );
           }
         }
       }
