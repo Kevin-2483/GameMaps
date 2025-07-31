@@ -155,6 +155,22 @@ class R6BoxApp extends StatelessWidget {
               highContrast: theme.highContrast,
             );
 
+            // 同步数据库中的语言设置到LocaleProvider
+            final userLocale = userPrefsProvider.locale;
+            if (userLocale.isNotEmpty) {
+              final parts = userLocale.split('_');
+              final languageCode = parts[0];
+              final countryCode = parts.length > 1 ? parts[1] : '';
+              final newLocale = Locale(languageCode, countryCode);
+              
+              // 只有当数据库中的语言设置与当前LocaleProvider不同时才更新
+              if (localeProvider.locale?.languageCode != languageCode) {
+                Future.microtask(() {
+                  localeProvider.setLocale(newLocale);
+                });
+              }
+            }
+
             // 只初始化一次窗口管理服务
             if (!_windowManagerInitialized) {
               WindowManagerService().initialize(userPrefsProvider);
