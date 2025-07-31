@@ -73,7 +73,7 @@ jobs:
 
     - name: Build web
       run: |
-        flutter build web --release --base-href "/GameMaps/"
+        flutter build web --release --base-href "/TactiBoardApp/"
     - name: Add .nojekyll file
       run: touch build/web/.nojekyll
         
